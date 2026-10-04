@@ -51,6 +51,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
   const [isClientSpeaking, setIsClientSpeaking] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('en-US-JennyNeural');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [micNotice, setMicNotice] = useState<string | null>(null);
 
   // References
   const micSessionRef = useRef<{ stop: () => Promise<any> } | null>(null);
@@ -95,6 +96,9 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           const res = await micSessionRef.current.stop();
           if (res?.transcript && res.transcript.trim()) {
             setTextInput(res.transcript.trim());
+            setMicNotice(null);
+          } else if (!textInput.trim()) {
+            setMicNotice('No speech detected. Check that your mic is unmuted or use Keyboard mode below.');
           }
         } catch (_) {}
         micSessionRef.current = null;
@@ -107,6 +111,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
       setIsClientSpeaking(false);
       setIsRecording(true);
       setMicVolume(15);
+      setMicNotice('Listening to your mic... Speak now! Words appear live in the box.');
 
       const engine = new UniversalMicEngine();
       universalMicRef.current = engine;
@@ -118,6 +123,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           onTranscriptUpdate: (streamedText) => {
             // Live syllable-by-syllable word streaming directly into the text box!
             setTextInput(streamedText);
+            setMicNotice('Speech detected! Transcribing live into box...');
           },
           onAutoStop: (finalText) => {
             // Automatic silence detection: stops recording and inputs text on conversational pause
@@ -126,6 +132,9 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             micSessionRef.current = null;
             if (finalText && finalText.trim()) {
               setTextInput(finalText.trim());
+              setMicNotice(null);
+            } else if (!textInput.trim()) {
+              setMicNotice('Finished listening. No clear words were heard. Try speaking louder or switch to Keyboard below.');
             }
             soundEffects.playSuccess();
             setTimeout(() => {
@@ -136,13 +145,15 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             console.warn('Voice roleplay error:', err);
             setIsRecording(false);
             setMicVolume(0);
+            setMicNotice(err);
           },
         });
 
         micSessionRef.current = session;
-      } catch (e) {
+      } catch (e: any) {
         setIsRecording(false);
         setMicVolume(0);
+        setMicNotice(e?.message || 'Could not access microphone.');
       }
     }
   };
@@ -433,6 +444,43 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Real-time volume visualizer while recording */}
+        {isRecording && (
+          <div className="flex items-center justify-between px-4 py-2 rounded-2xl bg-[#18252b] border border-[#58cc02]/30 text-xs font-bold text-slate-300 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#58cc02] animate-ping" />
+              <span className="text-[#58cc02] font-black">MIC ACTIVE:</span>
+              <div className="w-28 sm:w-40 h-2 bg-[#131f24] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#58cc02] to-[#1cb0f6] transition-all duration-75"
+                  style={{ width: `${Math.max(10, micVolume)}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">{micVolume}%</span>
+            </div>
+            <span className="text-[11px] text-slate-400 hidden sm:inline">
+              Speak clearly into mic
+            </span>
+          </div>
+        )}
+
+        {/* Informative Mic Notice Banner */}
+        {micNotice && (
+          <div className="px-4 py-2.5 rounded-2xl bg-[#18252b] border-2 border-[#1cb0f6]/30 text-[#1cb0f6] text-xs font-bold flex items-center justify-between animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <span>🎙️</span>
+              <span>{micNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMicNotice(null)}
+              className="text-slate-400 hover:text-white underline ml-2 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Central Pulsing Microphone Button (Voice Mode) */}
         {inputMode === 'voice' && (

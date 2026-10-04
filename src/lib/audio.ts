@@ -421,30 +421,8 @@ export class UniversalMicEngine {
             options.onVolumeChange(normalized);
           }
 
-          // Voice Activity Detection (VAD) using audio energy
-          if (normalized > 18) {
-            this.hasSpoken = true;
-            this.lastSpokenTime = Date.now();
-            if (this.silenceTimer) {
-              clearTimeout(this.silenceTimer);
-              this.silenceTimer = null;
-            }
-          } else if (this.hasSpoken && this.lastSpokenTime > 0) {
-            const silenceElapsed = Date.now() - this.lastSpokenTime;
-            // If user spoke and has been silent for autoDelay, trigger auto-stop!
-            if (silenceElapsed >= autoDelay && !this.isAutoStopping && this.isListening) {
-              this.isAutoStopping = true;
-              setTimeout(async () => {
-                if (this.isListening) {
-                  const result = await this.stopInternal();
-                  if (options.onAutoStop) {
-                    options.onAutoStop(result.transcript);
-                  }
-                }
-              }, 50);
-            }
-          }
-
+          // Only report volume for visual UI metering
+          // Do NOT trigger premature auto-stop based on mechanical click noise!
           this.animFrameId = requestAnimationFrame(updateVolume);
         };
         updateVolume();
@@ -495,7 +473,10 @@ export class UniversalMicEngine {
         rec.continuous = true;
         rec.interimResults = true;
         rec.maxAlternatives = 1;
-        rec.lang = 'en-US';
+        
+        // Dynamically match user's browser language with fallback to en-US
+        const detectedLang = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
+        rec.lang = detectedLang || 'en-US';
 
         rec.onresult = (event: any) => {
           let instanceFinal = '';
@@ -525,10 +506,10 @@ export class UniversalMicEngine {
               options.onTranscriptUpdate(fullDisplayed, instanceInterim.length === 0);
             }
 
-            // Reset speech silence timer: auto-stop after pause
+            // ONLY AFTER actual speech words have been transcribed, set pause auto-stop timer!
             if (this.silenceTimer) clearTimeout(this.silenceTimer);
             this.silenceTimer = setTimeout(async () => {
-              if (this.isListening && !this.isAutoStopping) {
+              if (this.isListening && !this.isAutoStopping && this.hasSpoken) {
                 this.isAutoStopping = true;
                 const result = await this.stopInternal();
                 if (options.onAutoStop) {
@@ -545,17 +526,40 @@ export class UniversalMicEngine {
           console.warn('SpeechRecognition notice:', errType);
           if (errType === 'not-allowed') {
             if (options.onError) {
-              options.onError('Microphone access was denied. Please allow microphone permissions.');
+              options.onError('Microphone permission was denied. Please allow microphone access in your browser.');
+            }
+          } else if (errType === 'network') {
+            if (options.onError) {
+              options.onError('Speech recognition network timeout. Please check your internet connection or use keyboard.');
             }
           }
         };
 
         rec.onend = () => {
-          // If user is still recording and not auto-stopping, restart recognition
-          if (this.isListening && this.recognition && !this.isAutoStopping) {
-            try {
-              this.recognition.start();
-            } catch (_) {}
+          // If user is still recording and not auto-stopping, restart recognition safely
+          if (this.isListening && !this.isAutoStopping) {
+            setTimeout(() => {
+              if (this.isListening && !this.isAutoStopping) {
+                try {
+                  if (this.recognition) {
+                    this.recognition.start();
+                  }
+                } catch (restartErr: any) {
+                  // If already running or resetting, recreate instance
+                  try {
+                    const newRec = new SpeechRec();
+                    this.recognition = newRec;
+                    newRec.continuous = true;
+                    newRec.interimResults = true;
+                    newRec.lang = detectedLang || 'en-US';
+                    newRec.onresult = rec.onresult;
+                    newRec.onerror = rec.onerror;
+                    newRec.onend = rec.onend;
+                    newRec.start();
+                  } catch (_) {}
+                }
+              }
+            }, 100);
           }
         };
 
