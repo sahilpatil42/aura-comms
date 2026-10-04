@@ -19,13 +19,15 @@ import { ApiKeyModal } from '@/components/settings/ApiKeyModal';
 import { GlossaryModal } from '@/components/glossary/GlossaryModal';
 import { soundEffects } from '@/lib/soundEffects';
 
+import { KnowledgeStore } from '@/lib/knowledgeStore';
+
 export default function Home() {
   const { 
     selectScenario, 
     activeScenario, 
     apiKeyModalOpen, 
     setApiKeyModalOpen,
-    knowledgeBaseModalOpen,
+    knowledgeBaseModalOpen, 
     setKnowledgeBaseModalOpen,
     glossaryModalOpen,
     setGlossaryModalOpen
@@ -35,6 +37,11 @@ export default function Home() {
 
   // Navigation tab state
   const [activeTab, setActiveTab] = useState<DuoTabType>('path');
+
+  // Sync and index complete Marketing Knowledge Base into localStorage on first load
+  React.useEffect(() => {
+    KnowledgeStore.init();
+  }, []);
 
   // Exercise Loop states
   const [selectedNode, setSelectedNode] = useState<PathNode | null>(null);

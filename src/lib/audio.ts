@@ -294,6 +294,7 @@ export class UniversalMicEngine {
   private lastAudioBlob: Blob | null = null;
   private silenceTimer: any = null;
   private hasSpoken = false;
+  private hasAcousticActivity = false;
   private lastSpokenTime = 0;
   private isAutoStopping = false;
 
@@ -302,7 +303,7 @@ export class UniversalMicEngine {
   }
 
   public hasVoiceActivity(): boolean {
-    return this.hasSpoken;
+    return this.hasSpoken || this.hasAcousticActivity;
   }
 
   /**
@@ -312,6 +313,7 @@ export class UniversalMicEngine {
     hasGetUserMedia: boolean;
     hasHardwareMic: boolean;
     hasWebSpeech: boolean;
+    activeDeviceName?: string;
     error?: string;
   }> {
     if (typeof window === 'undefined') {
@@ -334,8 +336,9 @@ export class UniversalMicEngine {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const tracks = stream.getAudioTracks();
       const hasHardwareMic = tracks.length > 0 && tracks[0].enabled;
+      const activeDeviceName = tracks[0]?.label || 'Default Microphone Device';
       tracks.forEach(t => t.stop());
-      return { hasGetUserMedia: true, hasHardwareMic, hasWebSpeech };
+      return { hasGetUserMedia: true, hasHardwareMic, hasWebSpeech, activeDeviceName };
     } catch (err: any) {
       return { 
         hasGetUserMedia: true, 
@@ -355,6 +358,7 @@ export class UniversalMicEngine {
     onVolumeChange?: (volume: number) => void;
     onTranscriptUpdate?: (transcript: string, isFinal: boolean) => void;
     onAutoStop?: (finalTranscript: string) => void;
+    onVoiceDetected?: (hasSound: boolean) => void;
     onError?: (err: string) => void;
     autoStopDelayMs?: number;
   }): Promise<VoiceCaptureSession | null> {
@@ -363,6 +367,7 @@ export class UniversalMicEngine {
     this.isListening = true;
     this.audioChunks = [];
     this.hasSpoken = false;
+    this.hasAcousticActivity = false;
     this.lastSpokenTime = 0;
     this.isAutoStopping = false;
     this.lastAudioBlob = null;
@@ -371,7 +376,8 @@ export class UniversalMicEngine {
       this.silenceTimer = null;
     }
 
-    const autoDelay = options.autoStopDelayMs ?? 1600; // 1.6s natural pause
+    // Generous conversational pause buffer (2.8s) so users aren't cut off while thinking
+    const autoDelay = options.autoStopDelayMs ?? 2800;
     this.fullTranscript = options.initialText ? options.initialText.trim() : '';
 
     // Step 1: Force physical microphone stream acquisition via getUserMedia
@@ -389,7 +395,7 @@ export class UniversalMicEngine {
       const isDenied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
       const msg = isDenied
         ? 'Microphone permission blocked. Please click the lock icon in your browser address bar and set Microphone to "Allow".'
-        : `Could not access microphone hardware: ${err?.message || 'Device in use'}`;
+        : `Could not access microphone hardware: ${err?.message || 'Device in use or unplugged'}`;
       if (options.onError) options.onError(msg);
       return null;
     }
@@ -399,6 +405,9 @@ export class UniversalMicEngine {
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtxClass) {
         this.audioCtx = new AudioCtxClass();
+        if (this.audioCtx.state === 'suspended') {
+          await this.audioCtx.resume().catch(() => {});
+        }
         this.analyser = this.audioCtx.createAnalyser();
         this.analyser.fftSize = 64;
 
@@ -406,6 +415,8 @@ export class UniversalMicEngine {
         source.connect(this.analyser);
 
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        let consecutiveSoundFrames = 0;
+
         const updateVolume = () => {
           if (!this.isListening || !this.analyser) return;
           this.analyser.getByteFrequencyData(dataArray);
@@ -421,8 +432,19 @@ export class UniversalMicEngine {
             options.onVolumeChange(normalized);
           }
 
-          // Only report volume for visual UI metering
-          // Do NOT trigger premature auto-stop based on mechanical click noise!
+          // Acoustic Voice Activity Detection (Detects sound waves even if browser speech API fails)
+          if (normalized > 12) {
+            consecutiveSoundFrames++;
+            if (consecutiveSoundFrames > 3) {
+              this.hasAcousticActivity = true;
+              if (options.onVoiceDetected) {
+                options.onVoiceDetected(true);
+              }
+            }
+          } else {
+            consecutiveSoundFrames = Math.max(0, consecutiveSoundFrames - 1);
+          }
+
           this.animFrameId = requestAnimationFrame(updateVolume);
         };
         updateVolume();
@@ -458,7 +480,7 @@ export class UniversalMicEngine {
         }
       };
 
-      this.mediaRecorder.start(250); // Record in 250ms chunks
+      this.mediaRecorder.start(200); // 200ms audio chunks
     } catch (recErr) {
       console.warn('MediaRecorder init notice:', recErr);
     }
@@ -495,6 +517,7 @@ export class UniversalMicEngine {
           const currentTotal = (instanceFinal + instanceInterim).trim();
           if (currentTotal) {
             this.hasSpoken = true;
+            this.hasAcousticActivity = true;
             this.lastSpokenTime = Date.now();
 
             const base = options.initialText ? options.initialText.trim() : '';
@@ -529,9 +552,8 @@ export class UniversalMicEngine {
               options.onError('Microphone permission was denied. Please allow microphone access in your browser.');
             }
           } else if (errType === 'network') {
-            if (options.onError) {
-              options.onError('Speech recognition network timeout. Please check your internet connection or use keyboard.');
-            }
+            // Web Speech network error (common on Brave or strict firewalls)
+            console.warn('Web Speech network restricted; falling back to hardware audio recording.');
           }
         };
 
@@ -544,20 +566,7 @@ export class UniversalMicEngine {
                   if (this.recognition) {
                     this.recognition.start();
                   }
-                } catch (restartErr: any) {
-                  // If already running or resetting, recreate instance
-                  try {
-                    const newRec = new SpeechRec();
-                    this.recognition = newRec;
-                    newRec.continuous = true;
-                    newRec.interimResults = true;
-                    newRec.lang = detectedLang || 'en-US';
-                    newRec.onresult = rec.onresult;
-                    newRec.onerror = rec.onerror;
-                    newRec.onend = rec.onend;
-                    newRec.start();
-                  } catch (_) {}
-                }
+                } catch (_) {}
               }
             }, 100);
           }
@@ -633,8 +642,35 @@ export class UniversalMicEngine {
     }
 
     this.lastAudioBlob = audioBlob;
+
+    // SMART FALLBACK: If WebSpeech failed to transcribe any words BUT acoustic audio was recorded,
+    // attempt server-side transcription using /api/transcribe
+    let finalTranscript = this.fullTranscript.trim();
+    if (!finalTranscript && audioBlob && audioBlob.size > 2000 && this.hasAcousticActivity) {
+      try {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'mic-recording.webm');
+        const storedKey = typeof window !== 'undefined' ? localStorage.getItem('AURA_GEMINI_KEY') : null;
+        if (storedKey) formData.append('apiKey', storedKey);
+
+        const resp = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data?.transcript && data.transcript.trim()) {
+            finalTranscript = data.transcript.trim();
+          }
+        }
+      } catch (err) {
+        console.warn('Fallback server transcription attempted:', err);
+      }
+    }
+
     return {
-      transcript: this.fullTranscript.trim(),
+      transcript: finalTranscript,
       audioBlob,
     };
   }
