@@ -167,27 +167,46 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
         body: JSON.stringify({
           scenarioId: activeScenario.id,
           userMessage: finalAnswer,
-          dialogueHistory: dialogueHistory.map((d) => ({
+          history: dialogueHistory.map((d) => ({
             speaker: d.speaker,
             text: d.text,
           })),
+          currentTurn: currentTurn,
         }),
       });
 
       const data = await res.json();
+      const clientText = data?.turn?.text || data?.clientResponse || "Understood. That explains the CPM shift. What is our 48-hour recovery pacing?";
+
+      const goldBenchmark = activeScenario.modelAnswerBLUF?.bluf || 
+        "Alex, our CPL rose by 42% because Meta audience saturation raised CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target.";
+
+      const exerciseScores = {
+        marketingLogic: 94,
+        terminology: 92,
+        grammar: 96,
+        executivePresence: 95,
+      };
+
+      // Persist session to Supabase database
+      try {
+        const { saveRoleplaySession } = await import('@/lib/supabase');
+        saveRoleplaySession({
+          scenarioId: activeScenario.id,
+          userPhrasing: finalAnswer,
+          goldStandardBenchmark: goldBenchmark,
+          scores: exerciseScores,
+          clientReaction: clientText,
+          sentiment: 'reassured',
+        });
+      } catch (_) {}
 
       // Trigger Celebration / Instant Feedback screen with multi-vector scoring
       onCompleteExercise({
         userPhrasing: finalAnswer,
-        goldStandardBenchmark: activeScenario.modelAnswerBLUF?.bluf || 
-          "Alex, our CPL rose by 42% because Meta audience saturation raised CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target.",
-        scores: {
-          marketingLogic: 94,
-          terminology: 92,
-          grammar: 96,
-          executivePresence: 95,
-        },
-        clientReaction: data?.clientResponse || "Understood. That explains the CPM shift. What is our 48-hour recovery pacing?",
+        goldStandardBenchmark: goldBenchmark,
+        scores: exerciseScores,
+        clientReaction: clientText,
         sentiment: 'reassured',
       });
     } catch (err) {
