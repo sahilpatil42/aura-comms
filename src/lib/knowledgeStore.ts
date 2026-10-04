@@ -11,6 +11,7 @@ import {
 } from '@/types/knowledge';
 import { ALL_PLATFORM_BATTLECARDS, ALL_MARKETING_BOOKS } from '@/data/marketingPlaybooksData';
 import { CORE_MARKETING_METRICS, GITHUB_KNOWLEDGE_ARTICLES } from '@/data/githubMarketingKnowledgeBase';
+import { ALL_170_SCENARIOS } from '@/data/marketingScenariosCatalog';
 
 const STORAGE_KEY = 'AURA_KNOWLEDGE_BASE_V2';
 const CURRENT_VERSION = '2.4.0';
@@ -170,6 +171,7 @@ export class KnowledgeStore {
     totalBooks: number;
     totalFormulas: number;
     totalFieldScripts: number;
+    totalScenarios: number;
   } {
     const isCached = typeof window !== 'undefined' && Boolean(localStorage.getItem(STORAGE_KEY));
     return {
@@ -180,6 +182,7 @@ export class KnowledgeStore {
       totalBooks: ALL_MARKETING_BOOKS.length,
       totalFormulas: CORE_MARKETING_METRICS.length,
       totalFieldScripts: GITHUB_KNOWLEDGE_ARTICLES.length,
+      totalScenarios: ALL_170_SCENARIOS.length,
     };
   }
 }

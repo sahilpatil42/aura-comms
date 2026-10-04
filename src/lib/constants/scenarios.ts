@@ -1,22 +1,28 @@
 import { Scenario } from '@/types/scenario';
 import { 
+  ALL_170_SCENARIOS,
   ALL_MARKETING_SCENARIOS,
   BEGINNER_SCENARIOS,
   INTERMEDIATE_SCENARIOS,
   ADVANCED_SCENARIOS,
+  LEGEND_SCENARIOS
+} from '@/data/marketingScenariosCatalog';
+import { 
   CORE_MARKETING_METRICS,
   GITHUB_KNOWLEDGE_ARTICLES
 } from '@/data/githubMarketingKnowledgeBase';
 
 export {
+  ALL_170_SCENARIOS,
   ALL_MARKETING_SCENARIOS,
   BEGINNER_SCENARIOS,
   INTERMEDIATE_SCENARIOS,
   ADVANCED_SCENARIOS,
+  LEGEND_SCENARIOS,
   CORE_MARKETING_METRICS,
   GITHUB_KNOWLEDGE_ARTICLES
 };
 
-// CRISIS_SCENARIOS now includes all 14 scenarios across Beginner, Intermediate, and Advanced tiers,
-// defaulting to Beginner scenarios first so new users are not bombarded with C-suite crises!
+// Full catalog of 170 scenarios across 12 Units
 export const CRISIS_SCENARIOS: Scenario[] = ALL_MARKETING_SCENARIOS;
+

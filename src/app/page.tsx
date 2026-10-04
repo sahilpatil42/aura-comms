@@ -33,7 +33,7 @@ export default function Home() {
     setGlossaryModalOpen
   } = useSessionStore();
 
-  const { addGems, addXp } = useGamificationStore();
+  const { addGems, addXp, completeNode } = useGamificationStore();
 
   // Navigation tab state
   const [activeTab, setActiveTab] = useState<DuoTabType>('path');
@@ -78,6 +78,9 @@ export default function Home() {
 
   // Handle clicking "CONTINUE" on Screen 4 (Returns to Path Screen with rewards)
   const handleContinueFromCelebration = () => {
+    if (selectedNode) {
+      completeNode(selectedNode.id, 3);
+    }
     setFeedbackData(null);
     setIsExerciseActive(false);
     setActiveTab('path');

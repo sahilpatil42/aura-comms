@@ -1,16 +1,23 @@
 export type Stage = 1 | 2 | 3 | 4 | 5;
 
-export type ScenarioDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'senior' | 'director';
+export type ScenarioDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'senior' | 'director' | 'legend';
 
 export type ChannelCategory = 
   | 'google-ads'
   | 'meta-ads'
+  | 'linkedin-ads'
+  | 'snapchat-ads'
+  | 'gpt-ads'
+  | 'tiktok-ads'
+  | 'amazon-ads'
+  | 'apple-search-ads'
   | 'quick-commerce'
   | 'programmatic-dv360'
   | 'seo-organic'
   | 'analytics-tracking'
   | 'ecommerce-d2c'
-  | 'fundamentals';
+  | 'fundamentals'
+  | 'general';
 
 export interface BrokenKPI {
   metric: string;
