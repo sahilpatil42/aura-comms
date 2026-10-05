@@ -23,10 +23,20 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ensure newly added columns exist if table was already created
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS handle TEXT DEFAULT '@sahil_media';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_color TEXT DEFAULT '#58cc02';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS active_track_id TEXT DEFAULT 'media-buyer';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS active_track_title TEXT DEFAULT 'Media Buyer';
+
 -- Insert default user profile if not exists
 INSERT INTO public.profiles (id, name, handle, avatar, avatar_color, active_track_id, active_track_title, streak, gems, hearts, max_hearts, total_xp, league, league_rank)
 VALUES ('default_user', 'Sahil M.', '@sahil_media', '🦉', '#58cc02', 'media-buyer', 'Media Buyer', 14, 450, 5, 5, 2450, 'Obsidian League', 3)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  handle = COALESCE(public.profiles.handle, EXCLUDED.handle),
+  avatar_color = COALESCE(public.profiles.avatar_color, EXCLUDED.avatar_color),
+  active_track_id = COALESCE(public.profiles.active_track_id, EXCLUDED.active_track_id),
+  active_track_title = COALESCE(public.profiles.active_track_title, EXCLUDED.active_track_title);
 
 -- 2. User Path Progress (Completed modules, stars, scores)
 CREATE TABLE IF NOT EXISTS public.user_progress (
@@ -94,15 +104,29 @@ ALTER TABLE public.roleplay_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_quests ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read & write for demo / anonymous app access
+DROP POLICY IF EXISTS "Allow public read access on profiles" ON public.profiles;
 CREATE POLICY "Allow public read access on profiles" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public update access on profiles" ON public.profiles;
 CREATE POLICY "Allow public update access on profiles" ON public.profiles FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Allow public read access on user_progress" ON public.user_progress;
 CREATE POLICY "Allow public read access on user_progress" ON public.user_progress FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert access on user_progress" ON public.user_progress;
 CREATE POLICY "Allow public insert access on user_progress" ON public.user_progress FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update access on user_progress" ON public.user_progress;
 CREATE POLICY "Allow public update access on user_progress" ON public.user_progress FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Allow public read access on roleplay_sessions" ON public.roleplay_sessions;
 CREATE POLICY "Allow public read access on roleplay_sessions" ON public.roleplay_sessions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert access on roleplay_sessions" ON public.roleplay_sessions;
 CREATE POLICY "Allow public insert access on roleplay_sessions" ON public.roleplay_sessions FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow public read access on user_quests" ON public.user_quests;
 CREATE POLICY "Allow public read access on user_quests" ON public.user_quests FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public update access on user_quests" ON public.user_quests;
 CREATE POLICY "Allow public update access on user_quests" ON public.user_quests FOR UPDATE USING (true);
