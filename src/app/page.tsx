@@ -14,7 +14,6 @@ import { LeaderboardView } from '@/components/duo/LeaderboardView';
 import { QuestsView } from '@/components/duo/QuestsView';
 import { ShopView } from '@/components/duo/ShopView';
 import { DuoProfileView } from '@/components/duo/DuoProfileView';
-import { KnowledgeBaseModal } from '@/components/knowledge/KnowledgeBaseModal';
 import { ApiKeyModal } from '@/components/settings/ApiKeyModal';
 import { GlossaryModal } from '@/components/glossary/GlossaryModal';
 import { soundEffects } from '@/lib/soundEffects';
@@ -27,8 +26,6 @@ export default function Home() {
     activeScenario, 
     apiKeyModalOpen, 
     setApiKeyModalOpen,
-    knowledgeBaseModalOpen, 
-    setKnowledgeBaseModalOpen,
     glossaryModalOpen,
     setGlossaryModalOpen
   } = useSessionStore();
@@ -93,7 +90,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#131f24] text-slate-100 font-sans flex flex-col selection:bg-[#58cc02] selection:text-white">
+    <div className="min-h-screen w-full bg-[#131f24] text-slate-100 font-sans flex flex-col selection:bg-[#58cc02] selection:text-white">
       {/* 1. DUOLINGO TOP STATUS BAR */}
       {!isExerciseActive && (
         <DuoHeader
@@ -102,13 +99,13 @@ export default function Home() {
             setIsExerciseActive(false);
             setActiveTab(tab);
           }}
-          onOpenKnowledge={() => setKnowledgeBaseModalOpen(true)}
           onOpenSettings={() => setApiKeyModalOpen(true)}
         />
       )}
 
       {/* 2. MAIN VIEW AREA */}
-      <main className={`flex-1 flex flex-col w-full px-4 ${isExerciseActive ? 'pt-4' : 'pt-20 pb-20'}`}>
+      <main className={`flex-1 flex flex-col w-full px-2 sm:px-4 ${isExerciseActive ? 'pt-1 sm:pt-4 pb-2' : 'pt-16 sm:pt-20 pb-20 sm:pb-24'}`}>
+
         {/* If user is inside the Immersive Voice Roleplay Exercise */}
         {isExerciseActive ? (
           <VoiceRoleplayExercise
@@ -121,7 +118,6 @@ export default function Home() {
             {activeTab === 'path' && (
               <SkillTreePath
                 onSelectNode={handleSelectNode}
-                onOpenGuidebook={() => setKnowledgeBaseModalOpen(true)}
                 onOpenMysteryChest={handleOpenChest}
               />
             )}
@@ -139,7 +135,6 @@ export default function Home() {
             {activeTab === 'profile' && (
               <DuoProfileView
                 onOpenSettings={() => setApiKeyModalOpen(true)}
-                onOpenKnowledge={() => setKnowledgeBaseModalOpen(true)}
               />
             )}
           </>
@@ -164,10 +159,6 @@ export default function Home() {
         isOpen={isIntroModalOpen}
         onClose={() => setIsIntroModalOpen(false)}
         onStartLesson={handleStartLesson}
-        onOpenGuidebook={() => {
-          setIsIntroModalOpen(false);
-          setKnowledgeBaseModalOpen(true);
-        }}
       />
 
       {/* SCREEN 4: INSTANT FEEDBACK & CELEBRATION MODAL */}
@@ -182,13 +173,14 @@ export default function Home() {
       {chestModalGems !== null && (
         <div 
           onClick={() => setChestModalGems(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs select-none"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-6 text-center space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+            className="w-full max-w-sm bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-5 sm:p-6 text-center space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto"
           >
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-[#ff9600] border-b-4 border-[#cc7800] flex items-center justify-center text-4xl shadow-md">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-[#ff9600] border-b-4 border-[#cc7800] flex items-center justify-center text-3xl sm:text-4xl shadow-md">
+
               🎁
             </div>
             <div>
@@ -211,12 +203,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* Knowledge Base Modal */}
-      <KnowledgeBaseModal
-        isOpen={knowledgeBaseModalOpen}
-        onClose={() => setKnowledgeBaseModalOpen(false)}
-      />
 
       {/* API Key / Voice Configuration Modal */}
       <ApiKeyModal

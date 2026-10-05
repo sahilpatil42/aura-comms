@@ -8,7 +8,7 @@ export const QuestsView: React.FC = () => {
   const { quests, claimQuest } = useGamificationStore();
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto pb-24 space-y-6 select-none animate-in fade-in duration-200">
+    <div className="flex flex-col w-full max-w-xl mx-auto pb-28 space-y-6 animate-in fade-in duration-200">
       {/* Monthly Quest Challenge Hero */}
       <div className="w-full bg-gradient-to-tr from-[#1cb0f6] to-[#0091d9] border-b-4 border-[#0074b0] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">

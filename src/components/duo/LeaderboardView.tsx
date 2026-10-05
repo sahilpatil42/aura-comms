@@ -21,7 +21,7 @@ export const LeaderboardView: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto pb-24 space-y-6 select-none animate-in fade-in duration-200">
+    <div className="flex flex-col w-full max-w-xl mx-auto pb-28 space-y-6 animate-in fade-in duration-200">
       {/* League Header Card */}
       <div className="w-full bg-gradient-to-tr from-[#202f36] to-[#18252b] border-2 border-[#37464f] rounded-3xl p-6 text-center space-y-3 shadow-lg relative overflow-hidden">
         <div className="w-20 h-20 mx-auto rounded-3xl bg-[#ffc800] border-b-4 border-[#e5a400] flex items-center justify-center text-4xl shadow-md">

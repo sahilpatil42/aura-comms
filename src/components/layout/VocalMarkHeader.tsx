@@ -29,18 +29,18 @@ export const VocalMarkHeader: React.FC<VocalMarkHeaderProps> = ({
         {/* Left: Brand Logo & Title */}
         <div 
           onClick={() => onTabChange('roadmap')}
-          className="flex items-center gap-space-sm cursor-pointer"
+          className="flex items-center gap-space-sm cursor-pointer min-w-0"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-secondary-container to-primary flex items-center justify-center text-on-primary font-black shadow-md">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-secondary-container to-primary flex items-center justify-center text-on-primary font-black shadow-md flex-shrink-0">
             <span className="material-symbols-outlined text-[20px]">mic</span>
           </div>
-          <span className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">
+          <span className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight truncate">
             {getTitle()}
           </span>
         </div>
 
         {/* Right: Streak, Energy, Profile */}
-        <div className="flex items-center gap-space-xs">
+        <div className="flex items-center gap-space-xs flex-shrink-0">
           {/* Streak */}
           <div className="flex items-center gap-1 bg-surface-container-high/90 px-2.5 py-1 rounded-full shadow-[0_0_12px_rgba(208,188,255,0.1)] border border-white/5">
             <span className="text-sm leading-none select-none">🔥</span>
@@ -52,15 +52,6 @@ export const VocalMarkHeader: React.FC<VocalMarkHeaderProps> = ({
             <span className="text-sm leading-none select-none text-tertiary">⚡</span>
             <span className="font-label-sm text-label-sm text-tertiary font-semibold">2.45k</span>
           </div>
-
-          {/* Knowledge Base Button */}
-          <button
-            onClick={() => useSessionStore.getState().setKnowledgeBaseModalOpen(true)}
-            title="GitHub Marketing Knowledge Base & Formulas"
-            className="flex items-center justify-center p-1.5 rounded-full bg-surface-container-high/90 hover:bg-surface-container-highest border border-white/5 text-primary transition-all cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[18px]">menu_book</span>
-          </button>
 
           {/* Settings / API Key Button */}
           <button

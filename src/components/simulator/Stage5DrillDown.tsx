@@ -231,7 +231,7 @@ export const Stage5DrillDown: React.FC = () => {
       {/* Drill Input & Feedback */}
       {!drillSession?.completed ? (
         <div className="card-glass rounded-2xl p-5 border border-white/10 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Your Verbal or Written Response:
             </span>
@@ -244,7 +244,7 @@ export const Stage5DrillDown: React.FC = () => {
               }`}
             >
               {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-              <span>{isListening ? 'Stop Speech' : 'Speak Response (Voice)'}</span>
+              <span>{isListening ? 'Stop Speech' : 'Speak (Voice)'}</span>
             </button>
           </div>
 
@@ -253,7 +253,7 @@ export const Stage5DrillDown: React.FC = () => {
             onChange={(e) => setDrillInput(e.target.value)}
             rows={4}
             placeholder="Deliver your crisp executive response here..."
-            className="w-full bg-slate-950/90 text-white placeholder-slate-500 text-xs sm:text-sm p-4 rounded-xl border border-white/10 focus:outline-none focus:border-amber-500 transition-colors"
+            className="w-full bg-slate-950/90 text-white placeholder-slate-500 text-xs sm:text-sm p-3.5 sm:p-4 rounded-xl border border-white/10 focus:outline-none focus:border-amber-500 transition-colors leading-relaxed min-h-[90px] box-border"
           />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

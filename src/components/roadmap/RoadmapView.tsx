@@ -9,7 +9,6 @@ import {
   INTERMEDIATE_SCENARIOS,
   ADVANCED_SCENARIOS
 } from '@/lib/constants/scenarios';
-import { KnowledgeBaseModal } from '@/components/knowledge/KnowledgeBaseModal';
 import { Scenario, ScenarioDifficulty } from '@/types/scenario';
 import { 
   Sparkles, 
@@ -41,8 +40,6 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
   const { selectScenario, activeScenario } = useSessionStore();
   const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
-  const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false);
-  const [knowledgeTab, setKnowledgeTab] = useState<'formulas' | 'github-articles' | 'glossary'>('formulas');
 
   // Filter scenarios based on user-selected difficulty and channel
   const filteredScenarios = useMemo(() => {
@@ -78,11 +75,6 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
   const handleLaunchScenario = (scenario: Scenario) => {
     selectScenario(scenario);
     onStartSimulation(scenario.id);
-  };
-
-  const openKnowledgeBase = (tab: 'formulas' | 'github-articles' | 'glossary' = 'formulas') => {
-    setKnowledgeTab(tab);
-    setIsKnowledgeModalOpen(true);
   };
 
   return (
@@ -136,39 +128,6 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
               <span>⚡</span>
               <span>2.4k XP</span>
             </div>
-          </div>
-        </div>
-
-        {/* GitHub Digital Marketing Knowledge Base Quick-Launcher Banner */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-primary-container/20 via-surface-container to-secondary-container/20 border border-primary/30 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-on-surface">GitHub Marketing Knowledge Base</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-primary/20 text-primary font-semibold">Active</span>
-              </div>
-              <p className="text-[11px] text-on-surface-variant">
-                Formulas (CTR, CPC, CPM, ROAS), benchmarks & interview playbooks
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => openKnowledgeBase('formulas')}
-              className="flex-1 sm:flex-none px-3 py-1.5 rounded-xl bg-surface-container-highest hover:bg-surface-variant text-on-surface text-xs font-semibold border border-white/10 transition-all cursor-pointer"
-            >
-              Formulas
-            </button>
-            <button
-              onClick={() => openKnowledgeBase('github-articles')}
-              className="flex-1 sm:flex-none px-3 py-1.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-sm hover:opacity-90 transition-all cursor-pointer"
-            >
-              Open Manual
-            </button>
           </div>
         </div>
       </section>
@@ -444,13 +403,6 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
           })}
         </div>
       </section>
-
-      {/* KNOWLEDGE BASE MODAL */}
-      <KnowledgeBaseModal
-        isOpen={isKnowledgeModalOpen}
-        onClose={() => setIsKnowledgeModalOpen(false)}
-        initialTab={knowledgeTab}
-      />
     </div>
   );
 };

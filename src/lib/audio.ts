@@ -151,18 +151,27 @@ export class NeuralTTS {
         if (options?.onEnd) options.onEnd();
       };
 
-      audio.onerror = (e) => {
-        console.warn('Neural TTS audio playback failed, falling back to browser synthesis:', e);
-        this.currentAudio = null;
-        this.fallbackBrowserSpeech(cleanText, options);
-      };
+        audio.onerror = (e) => {
+          console.warn('Neural TTS audio playback failed, falling back to browser synthesis:', e);
+          this.currentAudio = null;
+          this.fallbackBrowserSpeech(cleanText, options);
+        };
 
-      await audio.play();
-    } catch (err) {
-      console.warn('Neural TTS play error, using browser fallback:', err);
-      this.fallbackBrowserSpeech(text, options);
+        await audio.play();
+      } catch (err: any) {
+        this.currentAudio = null;
+        if (err?.name === 'NotAllowedError') {
+          // Mobile browser autoplay policy blocked audio before user interaction
+          console.warn('Audio autoplay blocked by mobile policy - awaiting user tap to listen');
+          this.isSpeakingNow = false;
+          if (options?.onError) options.onError(err);
+          return;
+        }
+        console.warn('Neural TTS play error, using browser fallback:', err);
+        this.fallbackBrowserSpeech(text, options);
+      }
     }
-  }
+
 
   /**
    * Preview a voice with a soothing sample
@@ -649,9 +658,11 @@ export class UniversalMicEngine {
     if (!finalTranscript && audioBlob && audioBlob.size > 2000 && this.hasAcousticActivity) {
       try {
         const formData = new FormData();
-        formData.append('audio', audioBlob, 'mic-recording.webm');
+        const ext = audioBlob.type.includes('mp4') ? 'mp4' : audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
+        formData.append('audio', audioBlob, `mic-recording.${ext}`);
         const storedKey = typeof window !== 'undefined' ? localStorage.getItem('AURA_GEMINI_KEY') : null;
         if (storedKey) formData.append('apiKey', storedKey);
+
 
         const resp = await fetch('/api/transcribe', {
           method: 'POST',

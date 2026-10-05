@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useGamificationStore, PathNode } from '@/stores/useGamificationStore';
 import { ALL_170_SCENARIOS } from '@/data/marketingScenariosCatalog';
 import { soundEffects } from '@/lib/soundEffects';
+import { useDeviceOptimization } from '@/hooks/useDeviceOptimization';
 
 export interface CurriculumUnitInfo {
   unit: number;
@@ -13,6 +14,7 @@ export interface CurriculumUnitInfo {
   description: string;
   count: number;
 }
+
 
 export const CURRICULUM_UNITS: CurriculumUnitInfo[] = [
   { unit: 1, title: 'Metric Literacy & Single-Word Foundations', section: 'Section 1 · Foundations', difficulty: 'beginner', description: 'Master foundational terms: CTR, CPC, CPM, CVR, ROAS, CPA, LTV, and CAC.', count: 15 },
@@ -31,13 +33,11 @@ export const CURRICULUM_UNITS: CurriculumUnitInfo[] = [
 
 interface SkillTreePathProps {
   onSelectNode: (node: PathNode) => void;
-  onOpenGuidebook: () => void;
   onOpenMysteryChest: (chestGems: number) => void;
 }
 
 export const SkillTreePath: React.FC<SkillTreePathProps> = ({
   onSelectNode,
-  onOpenGuidebook,
   onOpenMysteryChest,
 }) => {
   const { completedNodeIds, activeNodeId } = useGamificationStore();
@@ -102,14 +102,19 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
     return CURRICULUM_UNITS.find((u) => u.unit === selectedUnitNumber) || CURRICULUM_UNITS[0];
   }, [selectedUnitNumber]);
 
+  // Device detection for adaptive serpentine winding
+  const device = useDeviceOptimization();
+  const offsetScale = device.screenCategory === 'compact' ? 0.5 : device.isMobile ? 0.68 : 1;
+
   // Winding serpentine offsets in pixels (Duolingo style)
   const windingOffsets = [0, -55, 55, 0, -55, 55, 0, -45, 45, 0, -50, 50, 0, -40, 40];
 
   return (
-    <div className="flex flex-col items-center w-full max-w-xl mx-auto pb-24 select-none">
+    <div className="flex flex-col items-center w-full max-w-xl mx-auto pb-28 px-1 sm:px-0">
+
       
       {/* 1. TOP CURRICULUM LEVEL / DIFFICULTY FILTER */}
-      <div className="w-full flex items-center justify-between gap-1.5 p-1.5 mb-4 rounded-2xl bg-[#18252b] border border-white/5 overflow-x-auto text-xs font-bold">
+      <div className="w-full flex items-center gap-1.5 p-1.5 mb-3 rounded-2xl bg-[#18252b] border border-white/5 overflow-x-auto scrollbar-none text-xs font-bold">
         {[
           { id: 'all', label: 'All Levels (170)' },
           { id: 'beginner', label: 'Beginner (75)' },
@@ -128,7 +133,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
               else if (filter.id === 'legend') setSelectedUnitNumber(11);
               else if (filter.id === 'beginner') setSelectedUnitNumber(1);
             }}
-            className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
               selectedDifficulty === filter.id
                 ? 'bg-[#58cc02] text-white font-black shadow-sm'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -140,7 +145,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
       </div>
 
       {/* 2. HORIZONTAL UNIT SELECTOR PILLS (12 UNITS) */}
-      <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-none">
+      <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-3 scrollbar-none">
         {CURRICULUM_UNITS.map((u) => {
           const isSelected = selectedUnitNumber === u.unit;
           return (
@@ -152,7 +157,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
                 setSelectedUnitNumber(u.unit);
                 setSelectedDifficulty('all');
               }}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl font-black text-xs whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl font-black text-xs whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                 isSelected
                   ? u.difficulty === 'legend'
                     ? 'btn-3d-gold text-[#764800]'
@@ -172,7 +177,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
       </div>
 
       {/* 3. UNIT HEADER BANNER CARD (Duolingo Style) */}
-      <div className={`w-full rounded-3xl p-5 mb-8 text-white shadow-xl relative overflow-hidden transition-all ${
+      <div className={`w-full rounded-3xl p-4 sm:p-6 mb-6 text-white shadow-xl relative overflow-hidden transition-all ${
         currentUnitMeta.difficulty === 'legend'
           ? 'bg-gradient-to-tr from-[#e5a400] to-[#ffc800] border-b-4 border-[#b27e00] text-[#5c3a00]'
           : currentUnitMeta.difficulty === 'advanced'
@@ -181,36 +186,29 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
           ? 'bg-gradient-to-tr from-[#1899d6] to-[#1cb0f6] border-b-4 border-[#1479ab]'
           : 'bg-[#58cc02] border-b-4 border-[#46a302]'
       }`}>
-        <div className="flex items-start justify-between relative z-10">
+        <div className="relative z-10 space-y-2.5">
+          {/* Top Row: Unit Badge + Difficulty Pill */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="px-2.5 py-1 rounded-xl bg-black/25 text-[11px] font-black uppercase tracking-wider text-white whitespace-nowrap shadow-xs">
+              UNIT {currentUnitMeta.unit}
+            </span>
+            <span className="px-2.5 py-1 rounded-xl bg-white/20 text-[10px] font-black uppercase tracking-wider text-white whitespace-nowrap">
+              {currentUnitMeta.difficulty}
+            </span>
+          </div>
+
+          {/* Unit Info: Section name + Large Title + Description */}
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black tracking-widest uppercase bg-black/20 px-2.5 py-0.5 rounded-full text-white/90">
-                {currentUnitMeta.section.toUpperCase()} · UNIT {currentUnitMeta.unit}
-              </span>
-              <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full uppercase">
-                {currentUnitMeta.difficulty}
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black mt-2 leading-tight">
+            <span className="text-[11px] font-black uppercase tracking-wider text-white/80 block leading-tight">
+              {currentUnitMeta.section}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black mt-1 leading-snug break-words">
               {currentUnitMeta.title}
             </h2>
-            <p className="text-xs sm:text-sm font-bold text-white/90 mt-1 max-w-sm">
+            <p className="text-xs sm:text-sm font-bold text-white/90 mt-1.5 leading-relaxed break-words max-w-md">
               {currentUnitMeta.description}
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              soundEffects.playClick();
-              onOpenGuidebook();
-            }}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-100 text-[#131f24] border-b-4 border-slate-300 font-black text-xs rounded-2xl transition-all cursor-pointer hover:brightness-105 active:translate-y-1 active:border-b-0 shadow-md"
-            title="Open Marketing Field Manual & Benchmarks"
-          >
-            <span className="material-symbols-outlined text-[18px]">menu_book</span>
-            <span>GUIDE</span>
-          </button>
         </div>
 
         {/* Decorative background circles */}
@@ -224,7 +222,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
           const isCompleted = completedNodeIds.includes(node.id) || node.status === 'completed';
           const isActive = activeNodeId === node.id || (!isCompleted && node.id === 'node-1');
           const isLocked = !isCompleted && !isActive;
-          const xOffset = windingOffsets[index % windingOffsets.length];
+          const xOffset = Math.round(windingOffsets[index % windingOffsets.length] * offsetScale);
 
           return (
             <div
@@ -234,6 +232,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
                 transform: `translateX(${xOffset}px)`,
               }}
             >
+
               {/* Dotted path connector line between nodes */}
               {index > 0 && (
                 <div

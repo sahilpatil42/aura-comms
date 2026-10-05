@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { DeviceDiagnosticBanner } from '@/components/layout/DeviceDiagnosticBanner';
 import { 
   Key, 
   X, 
@@ -44,8 +45,9 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="card-glass w-full max-w-lg rounded-2xl border border-white/10 p-6 space-y-5 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="card-glass w-full max-w-lg rounded-3xl border border-white/10 p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl max-h-[88dvh] overflow-y-auto">
+
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
@@ -91,7 +93,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Paste AI Studio Key (or leave blank for high-fidelity fallback)..."
-              className="w-full bg-slate-950/90 text-white placeholder-slate-500 text-xs px-4 py-3 rounded-xl border border-white/10 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-slate-950/90 text-white placeholder-slate-500 text-xs px-4 py-3 rounded-xl border border-white/10 focus:outline-none focus:border-indigo-500 transition-colors box-border"
             />
           </div>
           <p className="text-[11px] text-slate-400">
@@ -145,6 +147,10 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Security & Database Status */}
+        {/* Active Device & Mobile Calibrator */}
+        <DeviceDiagnosticBanner />
+
+        {/* Supabase Integration */}
         <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-indigo-400" />
@@ -161,6 +167,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
             {isSupabaseConfigured ? 'Active' : 'Offline Mode'}
           </span>
         </div>
+
 
         {/* Actions */}
         <div className="pt-2 flex items-center justify-between">

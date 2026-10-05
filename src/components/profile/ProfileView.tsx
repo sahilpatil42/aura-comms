@@ -70,7 +70,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </div>
 
       {/* Agency Intelligence Tools */}
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={onOpenFeeds}
           className="flex flex-col items-center justify-center p-3 rounded-2xl bg-surface-container/80 hover:bg-surface-container-high border border-white/5 text-center transition-all cursor-pointer"
@@ -87,15 +87,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <span className="material-symbols-outlined text-[22px] text-secondary">menu_book</span>
           <span className="font-label-sm text-on-surface font-bold mt-1">Playbooks</span>
           <span className="text-[10px] text-on-surface-variant">BLUF Diction</span>
-        </button>
-
-        <button
-          onClick={() => useSessionStore.getState().setKnowledgeBaseModalOpen(true)}
-          className="flex flex-col items-center justify-center p-3 rounded-2xl bg-surface-container/80 hover:bg-surface-container-high border border-white/5 text-center transition-all cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[22px] text-primary">school</span>
-          <span className="font-label-sm text-on-surface font-bold mt-1">Formulas</span>
-          <span className="text-[10px] text-on-surface-variant">GitHub Manual</span>
         </button>
       </div>
 
@@ -123,16 +114,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Paste Gemini API key (optional for online AI speech)..."
-          className="w-full bg-surface-container-lowest text-on-surface text-xs p-3.5 rounded-xl border border-white/10 focus:outline-none focus:border-primary transition-colors"
+          className="w-full bg-surface-container-lowest text-on-surface text-xs p-3.5 rounded-xl border border-white/10 focus:outline-none focus:border-primary transition-colors box-border"
         />
 
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-[11px] text-on-surface-variant">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <span className="text-[11px] text-on-surface-variant break-words">
             {apiKey ? 'Custom Gemini Key Configured' : 'Running on High-Fidelity Local Engine'}
           </span>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold text-xs shadow-md transition-all cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-bold text-xs shadow-md transition-all cursor-pointer flex-shrink-0"
           >
             {isSaved ? 'Saved ✓' : 'Save'}
           </button>

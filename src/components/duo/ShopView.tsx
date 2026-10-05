@@ -16,7 +16,7 @@ export const ShopView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto pb-24 space-y-6 select-none animate-in fade-in duration-200">
+    <div className="flex flex-col w-full max-w-xl mx-auto pb-28 space-y-6 animate-in fade-in duration-200">
       {/* Super Pass Hero Banner */}
       <div className="w-full bg-gradient-to-tr from-[#ce82ff] to-[#9b42e6] border-b-4 border-[#7b23c7] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">

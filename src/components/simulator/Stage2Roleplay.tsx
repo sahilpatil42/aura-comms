@@ -699,7 +699,7 @@ export const Stage2Roleplay: React.FC = () => {
                 <p>{turn.text}</p>
 
                 {!isUser && (
-                  <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between">
+                  <div className="mt-2.5 pt-2 border-t border-white/5 flex flex-wrap items-center justify-between gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -715,12 +715,12 @@ export const Stage2Roleplay: React.FC = () => {
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-[11px] text-rose-300 hover:text-white border border-rose-500/20 transition-all cursor-pointer"
                       title="Replay dialogue with Soothing Neural Voice"
                     >
-                      <Volume2 className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Replay ({SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.name || 'Neural Voice'})</span>
+                      <Volume2 className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                      <span>Replay Voice</span>
                     </button>
                     <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      Soothing AI Voice
+                      Soothing Voice
                     </span>
                   </div>
                 )}
@@ -841,7 +841,7 @@ export const Stage2Roleplay: React.FC = () => {
           </button>
 
           {/* Multi-line Response Textarea */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <textarea
               ref={textareaRef}
               rows={2}
@@ -860,13 +860,13 @@ export const Stage2Roleplay: React.FC = () => {
               placeholder={
                 isRecording
                   ? micVolume > 0 
-                    ? `Live Transcribing... (Mic Level: ${micVolume}%) Words appear live in this box, stops automatically on pause`
-                    : 'Listening to your voice... Speak now, words will appear live in this box automatically'
+                    ? `Live Transcribing... (${micVolume}%) Words stream live here`
+                    : 'Listening... Speak now, words appear live here'
                   : isTranscribingAudio
                   ? 'Transcribing audio...'
-                  : 'Speak into microphone or type your executive response... (Enter to send, Shift+Enter for new line)'
+                  : 'Speak into microphone or type executive response...'
               }
-              className={`w-full bg-slate-950/80 text-white placeholder-slate-500 text-xs sm:text-sm px-4 py-3 pr-10 rounded-xl border transition-colors focus:outline-none resize-none min-h-[50px] max-h-36 leading-relaxed ${
+              className={`w-full bg-slate-950/80 text-white placeholder-slate-500 text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 sm:py-3 pr-10 rounded-xl border transition-colors focus:outline-none resize-none min-h-[75px] sm:min-h-[90px] max-h-36 leading-relaxed box-border ${
                 showEmptyWarning
                   ? 'border-amber-500 ring-1 ring-amber-500'
                   : 'border-white/10 focus:border-indigo-500'

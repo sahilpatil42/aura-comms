@@ -45,17 +45,18 @@ export const InstantFeedbackCelebration: React.FC<InstantFeedbackCelebrationProp
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs select-none animate-in fade-in duration-200">
       <div 
-        className={`w-full max-w-2xl rounded-t-3xl sm:rounded-3xl sm:mb-8 border-t-4 sm:border-4 shadow-2xl p-6 sm:p-8 space-y-6 animate-in slide-in-from-bottom-8 duration-300 ${
+        className={`w-full max-w-2xl rounded-t-3xl sm:rounded-3xl sm:mb-8 border-t-4 sm:border-4 shadow-2xl p-4 sm:p-8 space-y-4 sm:space-y-6 max-h-[92dvh] overflow-y-auto pb-safe animate-in slide-in-from-bottom-8 duration-300 ${
           isGreatJob
             ? 'bg-[#18252b] border-[#58cc02]'
             : 'bg-[#18252b] border-[#ffc800]'
         }`}
       >
+
         {/* 1. CELEBRATORY HEADER BANNER */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-b-4 ${
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-lg border-b-4 flex-shrink-0 ${
                 isGreatJob
                   ? 'bg-[#58cc02] border-[#46a302] text-white'
                   : 'bg-[#ffc800] border-[#e5a400] text-[#764800]'
@@ -63,10 +64,10 @@ export const InstantFeedbackCelebration: React.FC<InstantFeedbackCelebrationProp
             >
               {isGreatJob ? '🎉' : '💡'}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span
-                  className={`text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
                     isGreatJob
                       ? 'bg-[#58cc02]/20 text-[#58cc02]'
                       : 'bg-[#ffc800]/20 text-[#ffc800]'
@@ -74,17 +75,17 @@ export const InstantFeedbackCelebration: React.FC<InstantFeedbackCelebrationProp
                 >
                   {isGreatJob ? 'Executive Mastery' : 'Refinement Opportunity'}
                 </span>
-                <span className="text-xs font-black text-[#ffc800] flex items-center gap-1">
+                <span className="text-[10px] sm:text-xs font-black text-[#ffc800] flex items-center gap-1">
                   ⚡ +15 XP
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mt-0.5">
+              <h2 className="text-xl sm:text-3xl font-black text-white leading-tight mt-0.5 break-words">
                 {isGreatJob ? 'Great Job!' : 'Watch Your Terminology!'}
               </h2>
             </div>
           </div>
 
-          <div className="hidden sm:flex flex-col items-end">
+          <div className="hidden sm:flex flex-col items-end flex-shrink-0">
             <span className="text-xs font-bold text-slate-400">Client Response</span>
             <span className="text-xs font-black text-[#58cc02] bg-[#58cc02]/10 px-2 py-1 rounded-xl mt-1">
               ✓ Client Reassured
@@ -99,41 +100,41 @@ export const InstantFeedbackCelebration: React.FC<InstantFeedbackCelebrationProp
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* Logic */}
-            <div className="p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col">
-              <span className="text-[10px] font-black uppercase text-slate-400">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col min-w-0">
+              <span className="text-[10px] font-black uppercase text-slate-400 truncate">
                 Marketing Logic
               </span>
-              <span className="text-lg font-black text-[#58cc02] mt-0.5">
+              <span className="text-base sm:text-lg font-black text-[#58cc02] mt-0.5">
                 {data.scores.marketingLogic}%
               </span>
             </div>
 
             {/* Terminology */}
-            <div className="p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col">
-              <span className="text-[10px] font-black uppercase text-slate-400">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col min-w-0">
+              <span className="text-[10px] font-black uppercase text-slate-400 truncate">
                 Terminology
               </span>
-              <span className="text-lg font-black text-[#1cb0f6] mt-0.5">
+              <span className="text-base sm:text-lg font-black text-[#1cb0f6] mt-0.5">
                 {data.scores.terminology}%
               </span>
             </div>
 
             {/* Grammar */}
-            <div className="p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col">
-              <span className="text-[10px] font-black uppercase text-slate-400">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col min-w-0">
+              <span className="text-[10px] font-black uppercase text-slate-400 truncate">
                 Grammar & Clarity
               </span>
-              <span className="text-lg font-black text-[#ce82ff] mt-0.5">
+              <span className="text-base sm:text-lg font-black text-[#ce82ff] mt-0.5">
                 {data.scores.grammar}%
               </span>
             </div>
 
             {/* Executive Presence */}
-            <div className="p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col">
-              <span className="text-[10px] font-black uppercase text-slate-400">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#131f24] border-2 border-[#202f36] flex flex-col min-w-0">
+              <span className="text-[10px] font-black uppercase text-slate-400 truncate">
                 Exec Presence
               </span>
-              <span className="text-lg font-black text-[#ffc800] mt-0.5">
+              <span className="text-base sm:text-lg font-black text-[#ffc800] mt-0.5">
                 {data.scores.executivePresence}%
               </span>
             </div>
@@ -147,23 +148,23 @@ export const InstantFeedbackCelebration: React.FC<InstantFeedbackCelebrationProp
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Left: Your Phrasing */}
-            <div className="p-4 rounded-2xl bg-[#131f24] border-2 border-[#202f36] space-y-1.5">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#131f24] border-2 border-[#202f36] space-y-1.5 min-w-0">
               <div className="flex items-center gap-1.5 text-xs font-black text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-[#1cb0f6]" />
+                <span className="w-2 h-2 rounded-full bg-[#1cb0f6] flex-shrink-0" />
                 <span>Your Phrasing</span>
               </div>
-              <p className="text-xs sm:text-sm font-bold text-slate-200 leading-relaxed italic">
+              <p className="text-xs sm:text-sm font-bold text-slate-200 leading-relaxed italic break-words">
                 "{data.userPhrasing}"
               </p>
             </div>
 
             {/* Right: The Gold-Standard BLUF Benchmark */}
-            <div className="p-4 rounded-2xl bg-[#131f24] border-2 border-[#58cc02]/30 space-y-1.5">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#131f24] border-2 border-[#58cc02]/30 space-y-1.5 min-w-0">
               <div className="flex items-center gap-1.5 text-xs font-black text-[#58cc02]">
-                <Award className="w-3.5 h-3.5" />
+                <Award className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Gold-Standard BLUF Benchmark</span>
               </div>
-              <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">
+              <p className="text-xs sm:text-sm font-bold text-white leading-relaxed break-words">
                 "{data.goldStandardBenchmark}"
               </p>
             </div>

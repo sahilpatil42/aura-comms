@@ -138,25 +138,25 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="card-glass w-full max-w-5xl rounded-3xl border-2 border-[#2b3a42] p-4 sm:p-6 space-y-4 shadow-2xl max-h-[92vh] flex flex-col bg-[#131f24] text-slate-100 select-none">
-        
+      <div className="card-glass w-full max-w-5xl rounded-3xl border-2 border-[#2b3a42] p-3 sm:p-6 space-y-3 sm:space-y-4 shadow-2xl max-h-[92dvh] flex flex-col bg-[#131f24] text-slate-100 select-none overflow-hidden">
+
         {/* 1. Header with Offline LocalStorage Status */}
-        <div className="flex items-start justify-between border-b border-white/10 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-[#58cc02] border-b-4 border-[#46a302] text-white shadow-md">
-              <BookOpen className="w-6 h-6" />
+        <div className="flex items-start justify-between border-b border-white/10 pb-3 sm:pb-4 gap-2">
+          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="p-2 sm:p-3 rounded-2xl bg-[#58cc02] border-b-4 border-[#46a302] text-white shadow-md flex-shrink-0">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-[#58cc02]/20 text-[#58cc02] border border-[#58cc02]/40">
-                  AURA MARKETING ENCYCLOPEDIA
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-[#58cc02]/20 text-[#58cc02] border border-[#58cc02]/40">
+                  MARKETING ENCYCLOPEDIA
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-400 bg-white/5 border border-white/10 flex items-center gap-1">
-                  <Database className="w-2.5 h-2.5 text-[#1cb0f6]" />
-                  <span>100% Synced in LocalStorage (v{storageStats.version})</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold text-slate-400 bg-white/5 border border-white/10 flex items-center gap-1">
+                  <Database className="w-2.5 h-2.5 text-[#1cb0f6] flex-shrink-0" />
+                  <span className="truncate">Synced (v{storageStats.version})</span>
                 </span>
               </div>
-              <h2 className="text-lg sm:text-xl font-black text-white tracking-tight mt-1">
+              <h2 className="text-sm sm:text-xl font-black text-white tracking-tight mt-1 leading-snug break-words">
                 Ad Platforms, Strategy Books & Benchmark Field Manual
               </h2>
             </div>
@@ -164,7 +164,7 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
           
           <button
             onClick={onClose}
-            className="p-2 rounded-2xl hover:bg-[#202f36] text-slate-400 hover:text-white transition-all cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-2xl hover:bg-[#202f36] text-slate-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -369,7 +369,7 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {platform.benchmarks.map((bm, i) => (
                           <div key={i} className="p-3 bg-[#131f24] rounded-2xl border border-white/5 space-y-1">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-baseline justify-between gap-1">
                               <span className="text-xs font-black text-white">{bm.metric}</span>
                               <span className="text-[10px] font-bold text-[#58cc02]">{bm.healthyBenchmark}</span>
                             </div>
@@ -383,15 +383,15 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                     {/* Crisis Playbook & Boardroom BLUF Script */}
                     {platform.crisisPlaybooks.map((cp, idx) => (
                       <div key={idx} className="p-3.5 bg-[#131f24] rounded-2xl border-2 border-[#ff4b4b]/30 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-xs font-black text-[#ff4b4b]">
-                            <ShieldAlert className="w-4 h-4" />
-                            <span>Crisis Response: {cp.situation}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-[#ff4b4b] min-w-0">
+                            <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+                            <span className="break-words">Crisis Response: {cp.situation}</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleCopyScript(`${platform.id}-${idx}`, cp.boardroomBlufScript)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[10px] font-bold transition-all cursor-pointer"
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[10px] font-bold transition-all cursor-pointer self-start sm:self-auto flex-shrink-0"
                           >
                             {copiedScriptId === `${platform.id}-${idx}` ? (
                               <>
@@ -406,7 +406,7 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                             )}
                           </button>
                         </div>
-                        <p className="text-xs text-slate-200 italic bg-[#18252b] p-3 rounded-xl border border-white/5 font-serif leading-relaxed">
+                        <p className="text-xs text-slate-200 italic bg-[#18252b] p-3 rounded-xl border border-white/5 font-serif leading-relaxed break-words">
                           {cp.boardroomBlufScript}
                         </p>
                       </div>
@@ -527,22 +527,22 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                   key={i}
                   className="p-4 rounded-3xl bg-[#18252b] border-2 border-[#2b3a42] space-y-2.5"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
                     <div>
                       <h4 className="text-sm font-black text-white">{metric.name}</h4>
                       <span className="text-xs font-black text-[#58cc02]">{metric.acronym}</span>
                     </div>
-                    <span className="px-2.5 py-1 rounded-xl bg-[#131f24] border border-white/10 text-xs font-mono font-bold text-[#1cb0f6]">
+                    <span className="px-2.5 py-1 rounded-xl bg-[#131f24] border border-white/10 text-xs font-mono font-bold text-[#1cb0f6] break-all self-start sm:self-auto">
                       {metric.formula}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 font-semibold">{metric.description}</p>
+                  <p className="text-xs text-slate-300 font-semibold leading-relaxed break-words">{metric.description}</p>
                   <div className="p-2.5 bg-[#131f24] rounded-2xl border border-white/5 space-y-1 text-xs">
-                    <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex flex-wrap items-baseline justify-between text-[11px] gap-1">
                       <span className="text-slate-400 font-bold">Benchmark:</span>
                       <span className="text-[#58cc02] font-black">{metric.healthyBenchmark}</span>
                     </div>
-                    <p className="text-slate-400 text-[11px] leading-tight">
+                    <p className="text-slate-400 text-[11px] leading-tight break-words">
                       <span className="text-[#ffc800] font-black">Tip: </span>
                       {metric.beginnerTip}
                     </p>
@@ -604,15 +604,15 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
         </div>
 
         {/* 5. Footer */}
-        <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 font-bold">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#58cc02]" />
-            <span>Indexed in Browser LocalStorage for Instant Offline Access</span>
+        <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 text-xs text-slate-400 font-bold">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-[#58cc02] flex-shrink-0" />
+            <span className="truncate sm:whitespace-normal">Indexed in LocalStorage for Instant Offline Access</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="btn-3d-green px-5 py-2 rounded-xl text-xs font-black text-white"
+            className="btn-3d-green px-5 py-2.5 rounded-xl text-xs font-black text-white cursor-pointer self-stretch sm:self-auto text-center"
           >
             GOT IT
           </button>

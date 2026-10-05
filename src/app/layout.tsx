@@ -1,9 +1,30 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#131f24" },
+    { media: "(prefers-color-scheme: light)", color: "#131f24" },
+  ],
+  interactiveWidget: "resizes-content",
+};
 
 export const metadata: Metadata = {
   title: "AURA-Comms | VocalMark Executive Communication Roadmap",
   description: "Master enterprise client communication, technical terminology, and performance marketing crisis management with real-time voice roleplay and 4-pillar diagnostic audits.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AURA",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -12,8 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark scroll-smooth">
       <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <meta name="HandheldFriendly" content="true" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -25,9 +49,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary selection:text-on-primary">
+      <body className="bg-[#131f24] text-slate-100 font-sans min-h-screen w-full selection:bg-[#58cc02] selection:text-white flex flex-col antialiased">
         {children}
       </body>
     </html>
   );
 }
+

@@ -55,6 +55,14 @@ interface GamificationState {
   activeNodeId: string;
   quests: Quest[];
   
+  // Profile & Career Track Customization
+  userAvatar: string;
+  userAvatarColor: string;
+  userName: string;
+  userHandle: string;
+  activeTrackId: string;
+  activeTrackTitle: string;
+  
   // Actions
   addXp: (amount: number) => void;
   addGems: (amount: number) => void;
@@ -64,6 +72,9 @@ interface GamificationState {
   completeNode: (nodeId: string, stars?: number) => void;
   claimQuest: (questId: string) => void;
   incrementStreak: () => void;
+  setProfileAvatar: (avatar: string, color?: string) => void;
+  setProfileDetails: (name: string, handle: string) => void;
+  setActiveTrack: (trackId: string, trackTitle: string) => void;
 }
 
 export const useGamificationStore = create<GamificationState>()(
@@ -78,6 +89,12 @@ export const useGamificationStore = create<GamificationState>()(
       leagueRank: 3,
       completedNodeIds: ['node-1', 'node-2'],
       activeNodeId: 'node-3', // "Module 3: The CPL Spike Crisis"
+      userAvatar: '🦉',
+      userAvatarColor: '#58cc02',
+      userName: 'Sahil M.',
+      userHandle: '@sahil_media',
+      activeTrackId: 'media-buyer',
+      activeTrackTitle: 'Media Buyer',
       quests: [
         {
           id: 'q-1',
@@ -189,6 +206,18 @@ export const useGamificationStore = create<GamificationState>()(
 
       incrementStreak: () =>
         set((state) => ({ streak: state.streak + 1 })),
+
+      setProfileAvatar: (avatar: string, color?: string) =>
+        set((state) => ({
+          userAvatar: avatar,
+          userAvatarColor: color || state.userAvatarColor,
+        })),
+
+      setProfileDetails: (name: string, handle: string) =>
+        set({ userName: name, userHandle: handle }),
+
+      setActiveTrack: (trackId: string, trackTitle: string) =>
+        set({ activeTrackId: trackId, activeTrackTitle: trackTitle }),
     }),
     {
       name: 'aura_gamification_v1',
