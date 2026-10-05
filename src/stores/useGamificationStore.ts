@@ -55,13 +55,14 @@ interface GamificationState {
   activeNodeId: string;
   quests: Quest[];
   
-  // Profile & Career Track Customization
+  // Profile & Platform Customization
   userAvatar: string;
   userAvatarColor: string;
   userName: string;
   userHandle: string;
   activeTrackId: string;
   activeTrackTitle: string;
+  selectedPlatform: string;
   
   // Actions
   addXp: (amount: number) => void;
@@ -75,6 +76,7 @@ interface GamificationState {
   setProfileAvatar: (avatar: string, color?: string) => void;
   setProfileDetails: (name: string, handle: string) => void;
   setActiveTrack: (trackId: string, trackTitle: string) => void;
+  setSelectedPlatform: (platformId: string) => void;
 }
 
 export const useGamificationStore = create<GamificationState>()(
@@ -93,8 +95,9 @@ export const useGamificationStore = create<GamificationState>()(
       userAvatarColor: '#58cc02',
       userName: 'Sahil M.',
       userHandle: '@sahil_media',
-      activeTrackId: 'media-buyer',
-      activeTrackTitle: 'Media Buyer',
+      activeTrackId: 'google-ads',
+      activeTrackTitle: 'Google Ads',
+      selectedPlatform: 'google-ads',
       quests: [
         {
           id: 'q-1',
@@ -218,6 +221,12 @@ export const useGamificationStore = create<GamificationState>()(
 
       setActiveTrack: (trackId: string, trackTitle: string) =>
         set({ activeTrackId: trackId, activeTrackTitle: trackTitle }),
+
+      setSelectedPlatform: (platformId: string) =>
+        set({
+          selectedPlatform: platformId,
+          activeTrackId: platformId,
+        }),
     }),
     {
       name: 'aura_gamification_v1',

@@ -20,6 +20,7 @@ import { soundEffects } from '@/lib/soundEffects';
 
 import { KnowledgeStore } from '@/lib/knowledgeStore';
 import { NeuralTTS } from '@/lib/audio';
+import { KnowledgeBaseModal } from '@/components/knowledge/KnowledgeBaseModal';
 
 export default function Home() {
   const { 
@@ -28,7 +29,9 @@ export default function Home() {
     apiKeyModalOpen, 
     setApiKeyModalOpen,
     glossaryModalOpen,
-    setGlossaryModalOpen
+    setGlossaryModalOpen,
+    knowledgeBaseModalOpen,
+    setKnowledgeBaseModalOpen
   } = useSessionStore();
 
   const { addGems, addXp, completeNode } = useGamificationStore();
@@ -220,6 +223,12 @@ export default function Home() {
       <GlossaryModal
         isOpen={glossaryModalOpen}
         onClose={() => setGlossaryModalOpen(false)}
+      />
+
+      {/* Modular Platform Knowledge Base & Playbooks Modal */}
+      <KnowledgeBaseModal
+        isOpen={knowledgeBaseModalOpen}
+        onClose={() => setKnowledgeBaseModalOpen(false)}
       />
     </div>
   );

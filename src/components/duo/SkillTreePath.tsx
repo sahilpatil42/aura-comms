@@ -1,35 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGamificationStore, PathNode } from '@/stores/useGamificationStore';
-import { ALL_170_SCENARIOS } from '@/data/marketingScenariosCatalog';
+import { getPlatformById } from '@/data/adPlatforms';
+import { getScenariosForPlatform } from '@/data/platformScenarios';
 import { soundEffects } from '@/lib/soundEffects';
 import { useDeviceOptimization } from '@/hooks/useDeviceOptimization';
-
-export interface CurriculumUnitInfo {
-  unit: number;
-  title: string;
-  section: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'legend';
-  description: string;
-  count: number;
-}
-
-
-export const CURRICULUM_UNITS: CurriculumUnitInfo[] = [
-  { unit: 1, title: 'Metric Literacy & Single-Word Foundations', section: 'Section 1 · Foundations', difficulty: 'beginner', description: 'Master foundational terms: CTR, CPC, CPM, CVR, ROAS, CPA, LTV, and CAC.', count: 15 },
-  { unit: 2, title: 'Creative & Video Diagnostics', section: 'Section 1 · Foundations', difficulty: 'beginner', description: 'Diagnose 3s hook rates, hold rates, 9:16 vertical video, and UGC pacing.', count: 15 },
-  { unit: 3, title: 'Search Engine Mechanics', section: 'Section 1 · Foundations', difficulty: 'beginner', description: 'Control search terms, negative keywords, Quality Score, and ad rank.', count: 15 },
-  { unit: 4, title: 'Social & Meta Feed Foundations', section: 'Section 1 · Foundations', difficulty: 'beginner', description: 'Navigate the 50-conversion learning phase, CBO, CAPI, and attribution windows.', count: 15 },
-  { unit: 5, title: 'Retail, B2B & Emerging Platforms', section: 'Section 1 · Foundations', difficulty: 'beginner', description: 'Demystify LinkedIn CPMs, Snapchat Gen Z reach, Amazon ACOS, and GPT search ads.', count: 15 },
-  { unit: 6, title: 'Paid Social & Attribution Warfare', section: 'Section 2 · Intermediate Tactical', difficulty: 'intermediate', description: 'Reconcile CAPI deduplication, iOS 14.5 SKAN delays, and creative fatigue cycles.', count: 15 },
-  { unit: 7, title: 'Google & Performance Max Deep-Dive', section: 'Section 2 · Intermediate Tactical', difficulty: 'intermediate', description: 'Stop PMax brand cannibalization, extract search queries, and optimize GMC feeds.', count: 15 },
-  { unit: 8, title: 'Multi-Channel Cross-Pollination', section: 'Section 2 · Intermediate Tactical', difficulty: 'intermediate', description: 'Harness TikTok-to-Amazon lift, LinkedIn ABM search halos, and Q-Commerce dayparting.', count: 15 },
-  { unit: 9, title: 'C-Suite Panics & Financial Attribution', section: 'Section 3 · Advanced Executive', difficulty: 'advanced', description: 'Defend CPL spikes, answer CFO CAC challenges, and de-escalate founder anger.', count: 15 },
-  { unit: 10, title: 'Scaling Bottlenecks & Macro Disruption', section: 'Section 3 · Advanced Executive', difficulty: 'advanced', description: 'Overcome vertical scaling limits, holiday CPM surges, and inventory stockouts.', count: 15 },
-  { unit: 11, title: 'Boardroom Strategy & Retainer Defense', section: 'Section 4 · Legend Masterclass', difficulty: 'legend', description: 'Survive procurement fee cuts, defend MMM allocations, and protect agency retainers.', count: 10 },
-  { unit: 12, title: 'Masterclass Crisis Negotiations', section: 'Section 4 · Legend Masterclass', difficulty: 'legend', description: 'Execute calibrated Chris Voss de-escalations with furious C-suite executives.', count: 10 }
-];
 
 interface SkillTreePathProps {
   onSelectNode: (node: PathNode) => void;
@@ -40,29 +16,47 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
   onSelectNode,
   onOpenMysteryChest,
 }) => {
-  const { completedNodeIds, activeNodeId } = useGamificationStore();
+  const { completedNodeIds, activeNodeId, selectedPlatform } = useGamificationStore();
   const [selectedUnitNumber, setSelectedUnitNumber] = useState<number>(1);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
 
-  // Generate full 170 path nodes mapped from ALL_170_SCENARIOS
+  // Active Platform metadata and dedicated 50+ scenarios
+  const currentPlatform = useMemo(() => {
+    return getPlatformById(selectedPlatform || 'google-ads');
+  }, [selectedPlatform]);
+
+  const platformScenarios = useMemo(() => {
+    return getScenariosForPlatform(selectedPlatform || 'google-ads');
+  }, [selectedPlatform]);
+
+  // Reset unit selector when switching ad platform
+  useEffect(() => {
+    setSelectedUnitNumber(1);
+    setSelectedDifficulty('all');
+  }, [selectedPlatform]);
+
+  // Generate path nodes mapped from current platform's units and 50+ scenarios
   const allPathNodes = useMemo<PathNode[]>(() => {
     let accumulatedIndex = 0;
     const nodes: PathNode[] = [];
 
-    CURRICULUM_UNITS.forEach((u) => {
+    currentPlatform.units.forEach((u) => {
       for (let i = 0; i < u.count; i++) {
+        if (accumulatedIndex >= platformScenarios.length) break;
+        const s = platformScenarios[accumulatedIndex];
         accumulatedIndex++;
-        const s = ALL_170_SCENARIOS[accumulatedIndex - 1] || ALL_170_SCENARIOS[0];
-        const nodeId = `node-${accumulatedIndex}`;
+        const nodeId = `${currentPlatform.id}-node-${accumulatedIndex}`;
 
         let icon = 'search';
         if (s.category.includes('meta')) icon = 'trending_up';
         else if (s.category.includes('tiktok')) icon = 'play_circle';
         else if (s.category.includes('linkedin')) icon = 'business_center';
-        else if (s.category.includes('gpt')) icon = 'smart_toy';
-        else if (s.category.includes('amazon') || s.category.includes('ecommerce')) icon = 'shopping_cart';
+        else if (s.category.includes('snapchat')) icon = 'photo_camera';
+        else if (s.category.includes('reddit')) icon = 'forum';
+        else if (s.category.includes('amazon') || s.category.includes('flipkart') || s.category.includes('quick-commerce')) icon = 'shopping_cart';
         else if (s.difficulty === 'legend') icon = 'workspace_premium';
         else if (s.difficulty === 'advanced') icon = 'crisis_alert';
+        else if (s.difficulty === 'intermediate') icon = 'insights';
 
         nodes.push({
           id: nodeId,
@@ -75,7 +69,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
           difficulty: s.difficulty as any,
           xp: s.difficulty === 'legend' ? 30 : s.difficulty === 'advanced' ? 25 : s.difficulty === 'intermediate' ? 20 : 15,
           stars: completedNodeIds.includes(nodeId) ? 3 : 0,
-          status: completedNodeIds.includes(nodeId) ? 'completed' : activeNodeId === nodeId ? 'active' : 'locked',
+          status: completedNodeIds.includes(nodeId) ? 'completed' : (activeNodeId === nodeId || (!activeNodeId && accumulatedIndex === 1)) ? 'active' : 'locked',
           icon,
           clientName: s.stakeholder?.name || 'Client Lead',
           clientRole: s.stakeholder?.title || 'Executive',
@@ -86,7 +80,24 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
     });
 
     return nodes;
-  }, [completedNodeIds, activeNodeId]);
+  }, [currentPlatform, platformScenarios, completedNodeIds, activeNodeId]);
+
+  // Dynamic lesson counts per difficulty level for this platform
+  const difficultyCounts = useMemo(() => {
+    const counts = {
+      all: allPathNodes.length,
+      beginner: 0,
+      intermediate: 0,
+      advanced: 0,
+      legend: 0,
+    };
+    allPathNodes.forEach((n) => {
+      if (n.difficulty in counts) {
+        counts[n.difficulty as keyof typeof counts]++;
+      }
+    });
+    return counts;
+  }, [allPathNodes]);
 
   // Filter nodes for currently selected unit or difficulty
   const visibleNodes = useMemo(() => {
@@ -99,8 +110,8 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
 
   // Current Unit Metadata
   const currentUnitMeta = useMemo(() => {
-    return CURRICULUM_UNITS.find((u) => u.unit === selectedUnitNumber) || CURRICULUM_UNITS[0];
-  }, [selectedUnitNumber]);
+    return currentPlatform.units.find((u) => u.unit === selectedUnitNumber) || currentPlatform.units[0];
+  }, [currentPlatform, selectedUnitNumber]);
 
   // Device detection for adaptive serpentine winding
   const device = useDeviceOptimization();
@@ -112,15 +123,14 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-xl mx-auto pb-28 px-1 sm:px-0">
 
-      
-      {/* 1. TOP CURRICULUM LEVEL / DIFFICULTY FILTER */}
+      {/* 1. TOP CURRICULUM LEVEL / DIFFICULTY FILTER (50+ Platform Lessons) */}
       <div className="w-full flex items-center gap-1.5 p-1.5 mb-3 rounded-2xl bg-[#18252b] border border-white/5 overflow-x-auto scrollbar-none text-xs font-bold">
         {[
-          { id: 'all', label: 'All Levels (170)' },
-          { id: 'beginner', label: 'Beginner (75)' },
-          { id: 'intermediate', label: 'Intermediate (45)' },
-          { id: 'advanced', label: 'Advanced (30)' },
-          { id: 'legend', label: 'Legend (20)' },
+          { id: 'all', label: `All (${difficultyCounts.all})` },
+          { id: 'beginner', label: `Beginner (${difficultyCounts.beginner})` },
+          { id: 'intermediate', label: `Intermediate (${difficultyCounts.intermediate})` },
+          { id: 'advanced', label: `Advanced (${difficultyCounts.advanced})` },
+          { id: 'legend', label: `Legend (${difficultyCounts.legend})` },
         ].map((filter) => (
           <button
             key={filter.id}
@@ -128,9 +138,9 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
             onClick={() => {
               soundEffects.playClick();
               setSelectedDifficulty(filter.id);
-              if (filter.id === 'intermediate') setSelectedUnitNumber(6);
-              else if (filter.id === 'advanced') setSelectedUnitNumber(9);
-              else if (filter.id === 'legend') setSelectedUnitNumber(11);
+              if (filter.id === 'intermediate') setSelectedUnitNumber(3);
+              else if (filter.id === 'advanced') setSelectedUnitNumber(5);
+              else if (filter.id === 'legend') setSelectedUnitNumber(6);
               else if (filter.id === 'beginner') setSelectedUnitNumber(1);
             }}
             className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
@@ -144,9 +154,9 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
         ))}
       </div>
 
-      {/* 2. HORIZONTAL UNIT SELECTOR PILLS (12 UNITS) */}
+      {/* 2. HORIZONTAL UNIT SELECTOR PILLS */}
       <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-3 scrollbar-none">
-        {CURRICULUM_UNITS.map((u) => {
+        {currentPlatform.units.map((u) => {
           const isSelected = selectedUnitNumber === u.unit;
           return (
             <button
@@ -176,7 +186,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
         })}
       </div>
 
-      {/* 3. UNIT HEADER BANNER CARD (Duolingo Style) */}
+      {/* 3. UNIT HEADER BANNER CARD (Duolingo Style with Platform Custom Branding) */}
       <div className={`w-full rounded-3xl p-4 sm:p-6 mb-6 text-white shadow-xl relative overflow-hidden transition-all ${
         currentUnitMeta.difficulty === 'legend'
           ? 'bg-gradient-to-tr from-[#e5a400] to-[#ffc800] border-b-4 border-[#b27e00] text-[#5c3a00]'
@@ -187,13 +197,17 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
           : 'bg-[#58cc02] border-b-4 border-[#46a302]'
       }`}>
         <div className="relative z-10 space-y-2.5">
-          {/* Top Row: Unit Badge + Difficulty Pill */}
+          {/* Top Row: Platform Icon + Badge + Difficulty Pill */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="px-2.5 py-1 rounded-xl bg-black/25 text-[11px] font-black uppercase tracking-wider text-white whitespace-nowrap shadow-xs">
-              UNIT {currentUnitMeta.unit}
+            <span className="px-2.5 py-1 rounded-xl bg-black/25 text-[11px] font-black uppercase tracking-wider text-white whitespace-nowrap shadow-xs flex items-center gap-1.5">
+              <span>{currentPlatform.icon}</span>
+              <span>{currentPlatform.name} · UNIT {currentUnitMeta.unit}</span>
             </span>
             <span className="px-2.5 py-1 rounded-xl bg-white/20 text-[10px] font-black uppercase tracking-wider text-white whitespace-nowrap">
               {currentUnitMeta.difficulty}
+            </span>
+            <span className="px-2 py-0.5 rounded-lg bg-black/30 text-[9px] font-extrabold uppercase tracking-wide text-white/90">
+              {currentPlatform.badge}
             </span>
           </div>
 
@@ -220,7 +234,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
       <div className="relative flex flex-col items-center gap-y-10 w-full py-4">
         {visibleNodes.map((node, index) => {
           const isCompleted = completedNodeIds.includes(node.id) || node.status === 'completed';
-          const isActive = activeNodeId === node.id || (!isCompleted && node.id === 'node-1');
+          const isActive = activeNodeId === node.id || (!isCompleted && node.id === `${currentPlatform.id}-node-1`);
           const isLocked = !isCompleted && !isActive;
           const xOffset = Math.round(windingOffsets[index % windingOffsets.length] * offsetScale);
 
@@ -320,12 +334,12 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
 
       {/* 5. BOTTOM NEXT UNIT JUMP BUTTON */}
       <div className="w-full pt-8 flex items-center justify-center gap-3">
-        {selectedUnitNumber < 12 && (
+        {selectedUnitNumber < currentPlatform.units.length && (
           <button
             type="button"
             onClick={() => {
               soundEffects.playClick();
-              setSelectedUnitNumber((prev) => Math.min(12, prev + 1));
+              setSelectedUnitNumber((prev) => Math.min(currentPlatform.units.length, prev + 1));
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className="btn-3d-blue px-6 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 cursor-pointer"

@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { useGamificationStore } from '@/stores/useGamificationStore';
 import { soundEffects } from '@/lib/soundEffects';
 import { DeviceDiagnosticBanner } from '@/components/layout/DeviceDiagnosticBanner';
+import { getPlatformById } from '@/data/adPlatforms';
 
 interface DuoProfileViewProps {
   onOpenSettings: () => void;
@@ -38,10 +39,14 @@ export const DuoProfileView: React.FC<DuoProfileViewProps> = ({
     userAvatarColor, 
     userName, 
     userHandle, 
-    activeTrackTitle,
+    selectedPlatform,
+    completedNodeIds,
     setProfileAvatar,
     setProfileDetails
   } = useGamificationStore();
+
+  const platform = getPlatformById(selectedPlatform || 'google-ads');
+  const completedPlatformLessons = (completedNodeIds || []).filter(id => id.startsWith(platform.id)).length;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [tempAvatar, setTempAvatar] = useState(userAvatar || '🦉');
@@ -130,8 +135,16 @@ export const DuoProfileView: React.FC<DuoProfileViewProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-black text-white truncate">{userName || 'Sahil M.'}</h2>
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#58cc02]/20 text-[#58cc02] whitespace-nowrap">
-                {activeTrackTitle || 'Media Buyer'}
+              <span 
+                className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap"
+                style={{ 
+                  backgroundColor: platform.accentBg, 
+                  color: platform.brandColor, 
+                  border: `1px solid ${platform.brandColor}` 
+                }}
+              >
+                <span>{platform.icon}</span>
+                <span>{platform.name} Specialist</span>
               </span>
             </div>
             <p className="text-xs font-bold text-slate-400 mt-0.5 truncate">{userHandle || '@sahil_media'} · Joined Oct 2026</p>
@@ -364,6 +377,54 @@ export const DuoProfileView: React.FC<DuoProfileViewProps> = ({
               <span className="text-xs font-bold text-slate-400">Top 3 Finishes</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Active Ad Platform Specialization Card */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#18252b] border-2 border-[#37464f] shadow-sm space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-sm"
+              style={{ backgroundColor: platform.accentBg, border: `1.5px solid ${platform.brandColor}` }}
+            >
+              {platform.icon}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h4 className="text-base font-black text-white truncate">{platform.name} Specialization</h4>
+                <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-white/10" style={{ color: platform.brandColor }}>
+                  {platform.badge}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-slate-400 truncate mt-0.5">{platform.tagline}</p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <span className="text-sm font-black text-white block">{completedPlatformLessons} / {platform.totalLessons}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Drills Mastered</span>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-[#131f24] rounded-full h-2.5 overflow-hidden p-0.5 border border-white/5">
+          <div 
+            className="h-full rounded-full transition-all duration-500"
+            style={{ 
+              backgroundColor: platform.brandColor,
+              width: `${Math.max(5, Math.min(100, Math.round((completedPlatformLessons / platform.totalLessons) * 100)))}%`
+            }}
+          />
+        </div>
+
+        {/* Key Metrics Mastered */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">Core Metrics:</span>
+          {platform.keyMetrics.map((metric) => (
+            <span key={metric} className="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-[#202f36] text-slate-300 border border-white/5">
+              {metric}
+            </span>
+          ))}
         </div>
       </div>
 
