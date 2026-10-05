@@ -68,6 +68,7 @@ export class NeuralTTS {
   private static synth: SpeechSynthesis | null = typeof window !== 'undefined' ? window.speechSynthesis : null;
   private static isSpeakingNow: boolean = false;
   private static preferredVoice: string = 'jenny';
+  private static activeSessionId: number = 0;
 
   public static getPreferredVoice(): string {
     if (typeof window !== 'undefined') {
@@ -89,10 +90,15 @@ export class NeuralTTS {
   }
 
   public static stop(): void {
+    this.activeSessionId++;
     if (this.currentAudio) {
       try {
+        this.currentAudio.onplay = null;
+        this.currentAudio.onended = null;
+        this.currentAudio.onerror = null;
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
+        this.currentAudio.src = '';
         this.currentAudio = null;
       } catch (_) {}
     }
@@ -121,7 +127,7 @@ export class NeuralTTS {
   ): Promise<void> {
     if (typeof window === 'undefined') return;
 
-    // Stop any currently playing audio
+    // Stop any currently playing audio & cancel existing synthesis
     this.stop();
 
     if (!text || !text.trim()) {
@@ -129,13 +135,13 @@ export class NeuralTTS {
       return;
     }
 
+    const mySessionId = ++this.activeSessionId;
     this.isSpeakingNow = true;
-    if (options?.onStart) options.onStart();
 
     const selectedVoice = options?.voice || this.getPreferredVoice();
+    const cleanText = text.replace(/[*_#`~\[\]]/g, '').trim();
 
     try {
-      const cleanText = text.replace(/[*_#`~\[\]]/g, '').trim();
       const ttsUrl = `/api/tts?text=${encodeURIComponent(cleanText)}&voice=${encodeURIComponent(selectedVoice)}&lang=en`;
 
       const audio = new Audio(ttsUrl);
@@ -145,33 +151,56 @@ export class NeuralTTS {
         audio.playbackRate = Math.max(0.75, Math.min(1.5, options.rate));
       }
 
+      audio.onplay = () => {
+        if (mySessionId !== this.activeSessionId) {
+          audio.pause();
+          return;
+        }
+        if (options?.onStart) options.onStart();
+      };
+
       audio.onended = () => {
+        if (mySessionId !== this.activeSessionId) return;
         this.isSpeakingNow = false;
         this.currentAudio = null;
         if (options?.onEnd) options.onEnd();
       };
 
-        audio.onerror = (e) => {
-          console.warn('Neural TTS audio playback failed, falling back to browser synthesis:', e);
-          this.currentAudio = null;
-          this.fallbackBrowserSpeech(cleanText, options);
-        };
-
-        await audio.play();
-      } catch (err: any) {
+      audio.onerror = (e) => {
+        // If this session was cancelled or superseded, do nothing
+        if (mySessionId !== this.activeSessionId) return;
+        console.warn('Neural TTS audio stream error, falling back to browser speech:', e);
         this.currentAudio = null;
-        if (err?.name === 'NotAllowedError') {
-          // Mobile browser autoplay policy blocked audio before user interaction
-          console.warn('Audio autoplay blocked by mobile policy - awaiting user tap to listen');
-          this.isSpeakingNow = false;
-          if (options?.onError) options.onError(err);
-          return;
-        }
-        console.warn('Neural TTS play error, using browser fallback:', err);
-        this.fallbackBrowserSpeech(text, options);
-      }
-    }
+        this.fallbackBrowserSpeech(cleanText, mySessionId, options);
+      };
 
+      await audio.play();
+    } catch (err: any) {
+      // If this request was cancelled or superseded by another speak() or stop(), strictly abort
+      if (mySessionId !== this.activeSessionId) {
+        return;
+      }
+
+      this.currentAudio = null;
+
+      // If audio play was interrupted by pause() or stop(), do NOT fallback to browser speech
+      if (err?.name === 'AbortError') {
+        this.isSpeakingNow = false;
+        return;
+      }
+
+      if (err?.name === 'NotAllowedError') {
+        // Mobile browser autoplay policy blocked audio before user interaction
+        console.warn('Audio autoplay blocked by mobile policy - awaiting user tap to listen');
+        this.isSpeakingNow = false;
+        if (options?.onError) options.onError(err);
+        return;
+      }
+
+      console.warn('Neural TTS play error, using browser fallback:', err);
+      this.fallbackBrowserSpeech(cleanText, mySessionId, options);
+    }
+  }
 
   /**
    * Preview a voice with a soothing sample
@@ -186,8 +215,10 @@ export class NeuralTTS {
 
   private static fallbackBrowserSpeech(
     text: string,
-    options?: { rate?: number; pitch?: number; onEnd?: () => void }
+    sessionId: number,
+    options?: { rate?: number; pitch?: number; onEnd?: () => void; onStart?: () => void }
   ): void {
+    if (sessionId !== this.activeSessionId) return;
     if (!this.synth) {
       this.isSpeakingNow = false;
       if (options?.onEnd) options.onEnd();
@@ -208,12 +239,22 @@ export class NeuralTTS {
 
       if (naturalVoice) utterance.voice = naturalVoice;
 
+      utterance.onstart = () => {
+        if (sessionId !== this.activeSessionId) {
+          this.synth?.cancel();
+          return;
+        }
+        if (options?.onStart) options.onStart();
+      };
+
       utterance.onend = () => {
+        if (sessionId !== this.activeSessionId) return;
         this.isSpeakingNow = false;
         if (options?.onEnd) options.onEnd();
       };
 
       utterance.onerror = () => {
+        if (sessionId !== this.activeSessionId) return;
         this.isSpeakingNow = false;
         if (options?.onEnd) options.onEnd();
       };

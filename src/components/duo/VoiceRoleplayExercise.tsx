@@ -49,7 +49,9 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClientSpeaking, setIsClientSpeaking] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('en-US-JennyNeural');
+  const [selectedVoice, setSelectedVoice] = useState(() => NeuralTTS.getPreferredVoice());
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const [previewVoiceId, setPreviewVoiceId] = useState<string | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [micNotice, setMicNotice] = useState<string | null>(null);
 
@@ -101,7 +103,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
         micSessionRef.current.stop().catch(() => {});
       }
     };
-  }, [currentObjection, selectedVoice]);
+  }, [currentObjection]);
 
 
   // Diagnostic Mic Test Modal state
@@ -372,30 +374,68 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             <div className="speech-bubble-tail-left hidden sm:block" />
 
             <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 mb-2">
-              <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider text-[#ff4b4b] bg-[#ff4b4b]/15 px-2 py-0.5 rounded-md truncate">
-                Client Crisis Objection
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider text-[#ff4b4b] bg-[#ff4b4b]/15 px-2 py-0.5 rounded-md truncate">
+                  Client Crisis Objection
+                </span>
+
+                {/* AI Agent Voice Selector Pill */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEffects.playClick();
+                    setShowVoicePicker(true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#18252b] hover:bg-[#283942] border border-[#1cb0f6]/30 text-[10px] sm:text-[11px] font-black text-slate-200 hover:text-white transition-all cursor-pointer shadow-xs"
+                  title="Choose which AI Agent voice speaks"
+                >
+                  <span className="text-xs">
+                    {SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.gender === 'female' ? '👩' : '👨'}
+                  </span>
+                  <span>Agent: <strong className="text-[#1cb0f6]">{SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.name || 'Jenny'}</strong></span>
+                  <span className="text-[9px] text-[#1cb0f6]">▼</span>
+                </button>
+              </div>
+
+              {/* Stop / Listen Audio Toggle Button */}
               <button
                 type="button"
                 onClick={() => {
-                  NeuralTTS.stop();
-                  setIsClientSpeaking(true);
-                  setHasUserPlayedAudio(true);
-                  NeuralTTS.speak(currentObjection, {
-                    voice: selectedVoice,
-                    onEnd: () => setIsClientSpeaking(false),
-                    onError: () => setIsClientSpeaking(false),
-                  });
+                  soundEffects.playClick();
+                  if (isClientSpeaking) {
+                    NeuralTTS.stop();
+                    setIsClientSpeaking(false);
+                  } else {
+                    NeuralTTS.stop();
+                    setIsClientSpeaking(true);
+                    setHasUserPlayedAudio(true);
+                    NeuralTTS.speak(currentObjection, {
+                      voice: selectedVoice,
+                      onEnd: () => setIsClientSpeaking(false),
+                      onError: () => setIsClientSpeaking(false),
+                    });
+                  }
                 }}
-                className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-xl text-xs font-black border transition-all cursor-pointer flex-shrink-0 ${
-                  !hasUserPlayedAudio
+                className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-black border transition-all cursor-pointer flex-shrink-0 ${
+                  isClientSpeaking
+                    ? 'bg-[#ff4b4b]/20 border-[#ff4b4b] text-[#ff4b4b] hover:bg-[#ff4b4b]/30 shadow-sm animate-pulse'
+                    : !hasUserPlayedAudio
                     ? 'bg-[#1cb0f6]/20 border-[#1cb0f6] text-[#1cb0f6] shadow-sm animate-pulse'
                     : 'bg-[#131f24] hover:bg-[#18252b] text-[#1cb0f6] border-white/5'
                 }`}
-                title="Listen with Soothing Neural Voice"
+                title={isClientSpeaking ? 'Stop Playing' : 'Listen with Selected AI Voice'}
               >
-                <Volume2 className="w-3.5 h-3.5" />
-                <span>Listen</span>
+                {isClientSpeaking ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5" />
+                    <span>Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>Listen</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -752,6 +792,140 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                 className="btn-3d-neutral px-5 py-3 rounded-2xl text-xs font-black"
               >
                 CLOSE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. AI AGENT VOICE SELECTOR MODAL */}
+      {showVoicePicker && (
+        <div 
+          onClick={() => {
+            NeuralTTS.stop();
+            setPreviewVoiceId(null);
+            setShowVoicePicker(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in select-none"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[88dvh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎙️</span>
+                <div>
+                  <h3 className="text-base font-black text-white">Select AI Agent Voice</h3>
+                  <p className="text-[11px] text-slate-400 font-semibold">Only your chosen agent will read the problem statement</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  soundEffects.playClick();
+                  NeuralTTS.stop();
+                  setPreviewVoiceId(null);
+                  setShowVoicePicker(false);
+                }}
+                className="p-1.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {SOOTHING_VOICE_LIST.map((v) => {
+                const isSelected = selectedVoice === v.id;
+                const isPreviewing = previewVoiceId === v.id;
+
+                return (
+                  <div
+                    key={v.id}
+                    onClick={() => {
+                      soundEffects.playClick();
+                      NeuralTTS.stop();
+                      setPreviewVoiceId(null);
+                      NeuralTTS.setPreferredVoice(v.id);
+                      setSelectedVoice(v.id);
+                      setShowVoicePicker(false);
+                      // Read problem statement with newly selected agent
+                      setIsClientSpeaking(true);
+                      NeuralTTS.speak(currentObjection, {
+                        voice: v.id,
+                        onEnd: () => setIsClientSpeaking(false),
+                        onError: () => setIsClientSpeaking(false),
+                      });
+                    }}
+                    className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                      isSelected
+                        ? 'bg-[#1cb0f6]/15 border-[#1cb0f6] shadow-sm'
+                        : 'bg-[#131f24] hover:bg-[#202f36] border-white/5 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 ${
+                        isSelected ? 'bg-[#1cb0f6] text-white' : 'bg-[#202f36] text-slate-300'
+                      }`}>
+                        {v.gender === 'female' ? '👩' : '👨'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-white">{v.name}</span>
+                          {isSelected && (
+                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-[#1cb0f6] text-white">
+                              Active Agent
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-semibold truncate max-w-[210px]">
+                          {v.tone}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick Preview Voice Button */}
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        soundEffects.playClick();
+                        if (isPreviewing) {
+                          NeuralTTS.stop();
+                          setPreviewVoiceId(null);
+                          return;
+                        }
+                        setPreviewVoiceId(v.id);
+                        await NeuralTTS.previewVoice(v.id, () => {
+                          setPreviewVoiceId(null);
+                        });
+                      }}
+                      className={`p-2 rounded-xl border transition-all cursor-pointer flex-shrink-0 ${
+                        isPreviewing
+                          ? 'bg-[#ff4b4b]/20 border-[#ff4b4b] text-[#ff4b4b] animate-pulse'
+                          : 'bg-[#202f36] hover:bg-[#283942] border-white/10 text-[#1cb0f6]'
+                      }`}
+                      title={isPreviewing ? 'Stop Preview' : `Listen to ${v.name} sample`}
+                    >
+                      {isPreviewing ? <VolumeX className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  soundEffects.playClick();
+                  NeuralTTS.stop();
+                  setPreviewVoiceId(null);
+                  setShowVoicePicker(false);
+                }}
+                className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black"
+              >
+                DONE
               </button>
             </div>
           </div>

@@ -19,6 +19,7 @@ import { GlossaryModal } from '@/components/glossary/GlossaryModal';
 import { soundEffects } from '@/lib/soundEffects';
 
 import { KnowledgeStore } from '@/lib/knowledgeStore';
+import { NeuralTTS } from '@/lib/audio';
 
 export default function Home() {
   const { 
@@ -75,6 +76,7 @@ export default function Home() {
 
   // Handle clicking "CONTINUE" on Screen 4 (Returns to Path Screen with rewards)
   const handleContinueFromCelebration = () => {
+    NeuralTTS.stop();
     if (selectedNode) {
       completeNode(selectedNode.id, 3);
     }
@@ -96,6 +98,7 @@ export default function Home() {
         <DuoHeader
           currentTab={activeTab}
           onTabChange={(tab) => {
+            NeuralTTS.stop();
             setIsExerciseActive(false);
             setActiveTab(tab);
           }}
@@ -110,7 +113,10 @@ export default function Home() {
         {isExerciseActive ? (
           <VoiceRoleplayExercise
             onCompleteExercise={handleCompleteExercise}
-            onExit={() => setIsExerciseActive(false)}
+            onExit={() => {
+              NeuralTTS.stop();
+              setIsExerciseActive(false);
+            }}
           />
         ) : (
           <>

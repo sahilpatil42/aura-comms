@@ -3,6 +3,7 @@
 import React from 'react';
 import { PathNode } from '@/stores/useGamificationStore';
 import { soundEffects } from '@/lib/soundEffects';
+import { NeuralTTS } from '@/lib/audio';
 
 interface LessonIntroModalProps {
   node: PathNode | null;
@@ -123,6 +124,7 @@ export const LessonIntroModal: React.FC<LessonIntroModalProps> = ({
           type="button"
           onClick={() => {
             soundEffects.playClick();
+            NeuralTTS.stop();
             onStartLesson(node);
           }}
           className="btn-3d-green w-full py-4 text-base font-black tracking-wider rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer"

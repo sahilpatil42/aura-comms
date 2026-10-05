@@ -4,12 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { DeviceDiagnosticBanner } from '@/components/layout/DeviceDiagnosticBanner';
+import { SOOTHING_VOICE_LIST, NeuralTTS } from '@/lib/audio';
 import { 
   Key, 
   X, 
   Check, 
   ExternalLink, 
   Volume2, 
+  VolumeX,
+  Play,
   Database, 
   ShieldCheck, 
   Sparkles 
@@ -26,11 +29,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   const [isSaved, setIsSaved] = useState(false);
   const [voiceRate, setVoiceRate] = useState(1.05);
   const [voicePitch, setVoicePitch] = useState(0.95);
+  const [selectedVoice, setSelectedVoice] = useState(() => NeuralTTS.getPreferredVoice());
+  const [previewVoiceId, setPreviewVoiceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedKey = localStorage.getItem('AURA_GEMINI_KEY') || '';
       setApiKey(storedKey);
+      setSelectedVoice(NeuralTTS.getPreferredVoice());
     }
   }, [isOpen]);
 
@@ -103,12 +109,86 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
 
         {/* Speech & Audio Controls */}
         <div className="space-y-3 pt-3 border-t border-white/10">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <Volume2 className="w-4 h-4 text-emerald-400" />
-            Executive Voice Engine (Zero Cost Web Speech)
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Volume2 className="w-4 h-4 text-emerald-400" />
+              AI Agent Voice Selection
+            </span>
+            <span className="text-[10px] text-slate-400">
+              Only selected agent speaks
+            </span>
+          </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs">
+          {/* Voice List */}
+          <div className="space-y-2">
+            {SOOTHING_VOICE_LIST.map((v) => {
+              const isSelected = selectedVoice === v.id;
+              const isPreviewing = previewVoiceId === v.id;
+
+              return (
+                <div
+                  key={v.id}
+                  onClick={() => {
+                    NeuralTTS.stop();
+                    setPreviewVoiceId(null);
+                    NeuralTTS.setPreferredVoice(v.id);
+                    setSelectedVoice(v.id);
+                  }}
+                  className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                    isSelected
+                      ? 'bg-indigo-950/60 border-indigo-500 shadow-xs'
+                      : 'bg-slate-950/60 hover:bg-slate-900 border-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-base flex-shrink-0">
+                      {v.gender === 'female' ? '👩' : '👨'}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-white">{v.name}</span>
+                        {isSelected && (
+                          <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-indigo-500 text-white">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400 truncate max-w-[240px]">
+                        {v.tone}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Preview Voice Button */}
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (isPreviewing) {
+                        NeuralTTS.stop();
+                        setPreviewVoiceId(null);
+                        return;
+                      }
+                      setPreviewVoiceId(v.id);
+                      await NeuralTTS.previewVoice(v.id, () => {
+                        setPreviewVoiceId(null);
+                      });
+                    }}
+                    className={`p-1.5 rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
+                      isPreviewing
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-pulse'
+                        : 'bg-slate-800 hover:bg-slate-700 border-white/10 text-indigo-400'
+                    }`}
+                    title={isPreviewing ? 'Stop Preview' : `Listen to ${v.name} preview`}
+                  >
+                    {isPreviewing ? <VolumeX className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs mt-3">
             <span className="text-slate-300">Auto-Speak Client Spoken Audio</span>
             <input
               type="checkbox"
@@ -116,33 +196,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
               onChange={(e) => setAutoSpeakClient(e.target.checked)}
               className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="space-y-1">
-              <span className="text-slate-400">Speech Rate: {voiceRate}x</span>
-              <input
-                type="range"
-                min="0.8"
-                max="1.3"
-                step="0.05"
-                value={voiceRate}
-                onChange={(e) => setVoiceRate(parseFloat(e.target.value))}
-                className="w-full accent-indigo-500"
-              />
-            </div>
-            <div className="space-y-1">
-              <span className="text-slate-400">Voice Pitch: {voicePitch}</span>
-              <input
-                type="range"
-                min="0.7"
-                max="1.2"
-                step="0.05"
-                value={voicePitch}
-                onChange={(e) => setVoicePitch(parseFloat(e.target.value))}
-                className="w-full accent-indigo-500"
-              />
-            </div>
           </div>
         </div>
 
