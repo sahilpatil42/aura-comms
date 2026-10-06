@@ -123,8 +123,8 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-xl mx-auto pb-28 px-1 sm:px-0">
 
-      {/* 1. TOP CURRICULUM LEVEL / DIFFICULTY FILTER (50+ Platform Lessons) */}
-      <div className="w-full flex items-center gap-1.5 p-1.5 mb-3 rounded-2xl bg-[#18252b] border border-white/5 overflow-x-auto scrollbar-none text-xs font-bold">
+      {/* 1. TOP CURRICULUM LEVEL / DIFFICULTY FILTER (Frosted Glassmorphism) */}
+      <div className="w-full flex items-center gap-1.5 p-1.5 mb-3 rounded-2xl bg-[#0d1b3a]/60 backdrop-blur-xl border border-blue-400/20 shadow-lg shadow-blue-950/40 overflow-x-auto scrollbar-none text-xs font-bold">
         {[
           { id: 'all', label: `All (${difficultyCounts.all})` },
           { id: 'beginner', label: `Beginner (${difficultyCounts.beginner})` },
@@ -145,8 +145,8 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
             }}
             className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
               selectedDifficulty === filter.id
-                ? 'bg-[#58cc02] text-white font-black shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 text-white font-black shadow-md shadow-blue-500/30 border border-sky-300/30'
+                : 'text-blue-300/70 hover:text-white hover:bg-white/5'
             }`}
           >
             {filter.label}
@@ -170,13 +170,13 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl font-black text-xs whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                 isSelected
                   ? u.difficulty === 'legend'
-                    ? 'btn-3d-gold text-[#764800]'
+                    ? 'btn-3d-gold text-[#451a03]'
                     : u.difficulty === 'advanced'
-                    ? 'btn-3d-red text-white'
+                    ? 'bg-gradient-to-r from-blue-700 to-indigo-700 text-white border-b-4 border-blue-900 shadow-md'
                     : u.difficulty === 'intermediate'
-                    ? 'btn-3d-blue text-white'
-                    : 'btn-3d-green text-white'
-                  : 'bg-[#18252b] text-slate-400 hover:text-white border-2 border-[#202f36]'
+                    ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white border-b-4 border-indigo-800 shadow-md shadow-indigo-500/25'
+                    : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white border-b-4 border-blue-700 shadow-md shadow-blue-500/25'
+                  : 'bg-[#0d1b3a]/60 backdrop-blur-md text-blue-200/70 hover:text-white border border-blue-400/15 hover:border-blue-400/35'
               }`}
             >
               <span>U{u.unit}</span>
@@ -186,48 +186,48 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
         })}
       </div>
 
-      {/* 3. UNIT HEADER BANNER CARD (Duolingo Style with Platform Custom Branding) */}
-      <div className={`w-full rounded-3xl p-4 sm:p-6 mb-6 text-white shadow-xl relative overflow-hidden transition-all ${
+      {/* 3. UNIT HEADER BANNER CARD (Soothing Blue Twilight Glassmorphism) */}
+      <div className={`w-full rounded-3xl p-4 sm:p-6 mb-6 text-white shadow-2xl relative overflow-hidden backdrop-blur-2xl border transition-all ${
         currentUnitMeta.difficulty === 'legend'
-          ? 'bg-gradient-to-tr from-[#e5a400] to-[#ffc800] border-b-4 border-[#b27e00] text-[#5c3a00]'
+          ? 'bg-gradient-to-br from-[#451a03]/90 via-[#78350f]/85 to-[#b45309]/80 border-amber-400/30 shadow-amber-950/60'
           : currentUnitMeta.difficulty === 'advanced'
-          ? 'bg-gradient-to-tr from-[#ea2b2b] to-[#ff4b4b] border-b-4 border-[#c91818]'
+          ? 'bg-gradient-to-br from-[#1e1b4b]/95 via-[#312e81]/85 to-[#1e40af]/80 border-indigo-400/30 shadow-indigo-950/60'
           : currentUnitMeta.difficulty === 'intermediate'
-          ? 'bg-gradient-to-tr from-[#1899d6] to-[#1cb0f6] border-b-4 border-[#1479ab]'
-          : 'bg-[#58cc02] border-b-4 border-[#46a302]'
+          ? 'bg-gradient-to-br from-[#172554]/95 via-[#1e40af]/85 to-[#0369a1]/80 border-sky-400/30 shadow-blue-950/60'
+          : 'bg-gradient-to-br from-[#1e3a8a]/90 via-[#1d4ed8]/80 to-[#0284c7]/75 border-blue-300/30 shadow-blue-950/50'
       }`}>
         <div className="relative z-10 space-y-2.5">
           {/* Top Row: Platform Icon + Badge + Difficulty Pill */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="px-2.5 py-1 rounded-xl bg-black/25 text-[11px] font-black uppercase tracking-wider text-white whitespace-nowrap shadow-xs flex items-center gap-1.5">
+            <span className="px-2.5 py-1 rounded-xl bg-black/30 backdrop-blur-md text-[11px] font-black uppercase tracking-wider text-white whitespace-nowrap shadow-xs flex items-center gap-1.5 border border-white/10">
               <span>{currentPlatform.icon}</span>
               <span>{currentPlatform.name} · UNIT {currentUnitMeta.unit}</span>
             </span>
-            <span className="px-2.5 py-1 rounded-xl bg-white/20 text-[10px] font-black uppercase tracking-wider text-white whitespace-nowrap">
+            <span className="px-2.5 py-1 rounded-xl bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-white whitespace-nowrap border border-white/10">
               {currentUnitMeta.difficulty}
             </span>
-            <span className="px-2 py-0.5 rounded-lg bg-black/30 text-[9px] font-extrabold uppercase tracking-wide text-white/90">
+            <span className="px-2 py-0.5 rounded-lg bg-black/35 backdrop-blur-md text-[9px] font-extrabold uppercase tracking-wide text-white/90 border border-white/10">
               {currentPlatform.badge}
             </span>
           </div>
 
           {/* Unit Info: Section name + Large Title + Description */}
           <div>
-            <span className="text-[11px] font-black uppercase tracking-wider text-white/80 block leading-tight">
+            <span className="text-[11px] font-black uppercase tracking-wider text-sky-200/90 block leading-tight">
               {currentUnitMeta.section}
             </span>
             <h2 className="text-xl sm:text-2xl font-black mt-1 leading-snug break-words">
               {currentUnitMeta.title}
             </h2>
-            <p className="text-xs sm:text-sm font-bold text-white/90 mt-1.5 leading-relaxed break-words max-w-md">
+            <p className="text-xs sm:text-sm font-bold text-blue-100/90 mt-1.5 leading-relaxed break-words max-w-md">
               {currentUnitMeta.description}
             </p>
           </div>
         </div>
 
-        {/* Decorative background circles */}
-        <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
-        <div className="absolute right-16 top-1 w-12 h-12 rounded-full bg-white/10 pointer-events-none" />
+        {/* Decorative background glass circles with soft blue glow */}
+        <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-white/10 blur-xl pointer-events-none" />
+        <div className="absolute right-16 top-1 w-16 h-16 rounded-full bg-sky-400/15 blur-lg pointer-events-none" />
       </div>
 
       {/* 4. VERTICAL WINDING SERPENTINE PATH */}
@@ -250,7 +250,7 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
               {/* Dotted path connector line between nodes */}
               {index > 0 && (
                 <div
-                  className="absolute -top-10 w-1 h-10 border-l-4 border-dotted border-[#37464f] z-0 pointer-events-none"
+                  className="absolute -top-10 w-1 h-10 border-l-4 border-dotted border-blue-400/25 z-0 pointer-events-none"
                   style={{
                     left: '50%',
                     transform: 'translateX(-50%)',
@@ -261,15 +261,15 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
               {/* Active Node Crown & Mascot "START HERE!" Bubble */}
               {isActive && (
                 <div className="absolute -top-12 z-20 flex flex-col items-center animate-duo-bob">
-                  <div className="bg-[#ffc800] text-[#764800] border-2 border-[#e5a400] font-black text-[11px] px-3 py-1 rounded-2xl shadow-md uppercase tracking-wider flex items-center gap-1">
+                  <div className="bg-gradient-to-r from-sky-400 to-blue-500 text-white border-2 border-sky-300 font-black text-[11px] px-3 py-1 rounded-2xl shadow-lg shadow-sky-500/30 uppercase tracking-wider flex items-center gap-1">
                     <span>👑</span>
                     <span>START HERE!</span>
                   </div>
-                  <div className="w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-[#e5a400]" />
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-sky-400" />
                 </div>
               )}
 
-              {/* Circular Path Node Button */}
+              {/* Circular Path Node Button with Soothing Blue Glass Effect */}
               <button
                 type="button"
                 onClick={() => {
@@ -278,10 +278,10 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
                 }}
                 className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all cursor-pointer z-10 ${
                   isCompleted
-                    ? 'bg-[#58cc02] border-b-[6px] border-[#46a302] hover:brightness-110 active:translate-y-1 active:border-b-2 text-white shadow-lg'
+                    ? 'bg-gradient-to-b from-[#38bdf8] via-[#2563eb] to-[#1d4ed8] border-b-[6px] border-[#1e40af] text-white shadow-lg shadow-blue-500/35 hover:brightness-110 active:translate-y-1 active:border-b-2 ring-2 ring-sky-400/30'
                     : isActive
-                    ? 'bg-[#ffc800] border-b-[6px] border-[#e5a400] ring-4 ring-[#ffc800]/40 hover:brightness-110 active:translate-y-1 active:border-b-2 text-[#764800] shadow-xl'
-                    : 'bg-[#202f36] border-b-[6px] border-[#293840] hover:bg-[#283942] text-slate-500 shadow-md'
+                    ? 'bg-gradient-to-b from-[#60a5fa] via-[#3b82f6] to-[#1d4ed8] border-b-[6px] border-[#1e3a8a] ring-4 ring-sky-400/40 text-white shadow-xl shadow-sky-500/40 hover:brightness-110 active:translate-y-1 active:border-b-2'
+                    : 'bg-[#0d1836]/70 backdrop-blur-md border-b-[6px] border-[#081026] border-t border-x border-blue-400/10 text-blue-400/30 shadow-md hover:bg-[#13244e]/70'
                 }`}
                 title={node.title}
               >
@@ -292,20 +292,20 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
 
                 {/* Stars underneath completed node */}
                 {isCompleted && (
-                  <div className="absolute -bottom-4.5 flex items-center gap-0.5 bg-[#18252b] px-2 py-0.5 rounded-full border border-white/10 shadow-xs">
-                    <span className="text-[10px] text-[#ffc800]">★</span>
-                    <span className="text-[10px] text-[#ffc800]">★</span>
-                    <span className="text-[10px] text-[#ffc800]">★</span>
+                  <div className="absolute -bottom-4.5 flex items-center gap-0.5 bg-[#09122a]/90 backdrop-blur-md px-2 py-0.5 rounded-full border border-blue-400/25 shadow-xs">
+                    <span className="text-[10px] text-[#fbbf24]">★</span>
+                    <span className="text-[10px] text-[#fbbf24]">★</span>
+                    <span className="text-[10px] text-[#fbbf24]">★</span>
                   </div>
                 )}
               </button>
 
               {/* Node Title & Client Role */}
               <div className="mt-3 text-center max-w-[160px]">
-                <span className="text-xs font-black text-slate-200 block truncate">
+                <span className="text-xs font-black text-blue-100 block truncate">
                   {node.title.replace('Module ', 'M')}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 block truncate">
+                <span className="text-[10px] font-bold text-blue-300/70 block truncate">
                   {node.clientName}
                 </span>
               </div>
@@ -319,10 +319,10 @@ export const SkillTreePath: React.FC<SkillTreePathProps> = ({
                   }}
                   className="my-5 cursor-pointer group flex flex-col items-center"
                 >
-                  <div className="w-16 h-14 rounded-2xl bg-[#ff9600] border-b-4 border-[#cc7800] flex items-center justify-center text-white text-2xl shadow-md group-hover:scale-105 group-hover:brightness-110 transition-all">
+                  <div className="w-16 h-14 rounded-2xl bg-[#0d1b3a]/70 backdrop-blur-xl border-2 border-amber-400/35 flex items-center justify-center text-white text-2xl shadow-lg shadow-amber-500/20 group-hover:scale-105 group-hover:brightness-110 transition-all">
                     🎁
                   </div>
-                  <span className="text-[10px] font-black text-[#ff9600] uppercase mt-1 tracking-wider">
+                  <span className="text-[10px] font-black text-amber-300 uppercase mt-1 tracking-wider">
                     Unit {currentUnitMeta.unit} Chest (+30 💎)
                   </span>
                 </div>

@@ -95,22 +95,30 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#131f24] text-slate-100 font-sans flex flex-col selection:bg-[#58cc02] selection:text-white">
-      {/* 1. DUOLINGO TOP STATUS BAR */}
-      {!isExerciseActive && (
-        <DuoHeader
-          currentTab={activeTab}
-          onTabChange={(tab) => {
-            NeuralTTS.stop();
-            setIsExerciseActive(false);
-            setActiveTab(tab);
-          }}
-          onOpenSettings={() => setApiKeyModalOpen(true)}
-        />
-      )}
+    <div className="min-h-screen w-full bg-[#070d1e] text-slate-100 font-sans flex flex-col selection:bg-[#38bdf8] selection:text-[#070d1e] relative overflow-x-hidden">
+      {/* Ambient Soothing Blue Glows for Glassmorphism */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[15%] w-[600px] h-[600px] rounded-full bg-blue-600/15 blur-[130px]" />
+        <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] rounded-full bg-sky-500/10 blur-[130px]" />
+        <div className="absolute bottom-[5%] left-[-5%] w-[550px] h-[550px] rounded-full bg-indigo-600/12 blur-[140px]" />
+      </div>
 
-      {/* 2. MAIN VIEW AREA */}
-      <main className={`flex-1 flex flex-col w-full px-2 sm:px-4 ${isExerciseActive ? 'pt-1 sm:pt-4 pb-2' : 'pt-16 sm:pt-20 pb-20 sm:pb-24'}`}>
+      <div className="relative z-10 flex flex-col min-h-screen w-full">
+        {/* 1. TOP STATUS BAR */}
+        {!isExerciseActive && (
+          <DuoHeader
+            currentTab={activeTab}
+            onTabChange={(tab) => {
+              NeuralTTS.stop();
+              setIsExerciseActive(false);
+              setActiveTab(tab);
+            }}
+            onOpenSettings={() => setApiKeyModalOpen(true)}
+          />
+        )}
+
+        {/* 2. MAIN VIEW AREA */}
+        <main className={`flex-1 flex flex-col w-full px-2 sm:px-4 ${isExerciseActive ? 'pt-1 sm:pt-4 pb-2' : 'pt-16 sm:pt-20 pb-20 sm:pb-24'}`}>
 
         {/* If user is inside the Immersive Voice Roleplay Exercise */}
         {isExerciseActive ? (
@@ -182,20 +190,19 @@ export default function Home() {
       {chestModalGems !== null && (
         <div 
           onClick={() => setChestModalGems(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md select-none"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-5 sm:p-6 text-center space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto"
+            className="w-full max-w-sm bg-[#09122a]/92 backdrop-blur-2xl border-2 border-amber-400/25 rounded-3xl p-5 sm:p-6 text-center space-y-4 shadow-2xl shadow-blue-950/80 animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto"
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-[#ff9600] border-b-4 border-[#cc7800] flex items-center justify-center text-3xl sm:text-4xl shadow-md">
-
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-400 border-b-4 border-amber-600 flex items-center justify-center text-3xl sm:text-4xl shadow-md">
               🎁
             </div>
             <div>
-              <span className="text-xs font-black uppercase text-[#ffc800]">Bonus Chest</span>
+              <span className="text-xs font-black uppercase text-amber-300">Bonus Chest</span>
               <h3 className="text-2xl font-black text-white mt-1">+{chestModalGems} Gems!</h3>
-              <p className="text-xs font-bold text-slate-300 mt-1">
+              <p className="text-xs font-bold text-blue-200/80 mt-1">
                 Great pace on the skill path! Keep training to climb the Obsidian League.
               </p>
             </div>
@@ -205,7 +212,7 @@ export default function Home() {
                 soundEffects.playClick();
                 setChestModalGems(null);
               }}
-              className="btn-3d-green w-full py-3.5 rounded-2xl text-xs font-black"
+              className="btn-3d-blue w-full py-3.5 rounded-2xl text-xs font-black"
             >
               CLAIM & CONTINUE
             </button>
@@ -230,6 +237,7 @@ export default function Home() {
         isOpen={knowledgeBaseModalOpen}
         onClose={() => setKnowledgeBaseModalOpen(false)}
       />
+      </div>
     </div>
   );
 }

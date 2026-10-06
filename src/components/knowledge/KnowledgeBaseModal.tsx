@@ -137,26 +137,26 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="card-glass w-full max-w-5xl rounded-3xl border-2 border-[#2b3a42] p-3 sm:p-6 space-y-3 sm:space-y-4 shadow-2xl max-h-[92dvh] flex flex-col bg-[#131f24] text-slate-100 select-none overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-[#040817]/75 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-5xl rounded-3xl border border-blue-400/25 p-3 sm:p-6 space-y-3 sm:space-y-4 shadow-[0_20px_70px_rgba(2,6,23,0.85)] max-h-[92dvh] flex flex-col bg-[#09132c]/95 backdrop-blur-2xl text-slate-100 select-none overflow-hidden ring-1 ring-white/10">
 
         {/* 1. Header with Offline LocalStorage Status */}
         <div className="flex items-start justify-between border-b border-white/10 pb-3 sm:pb-4 gap-2">
           <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div className="p-2 sm:p-3 rounded-2xl bg-[#58cc02] border-b-4 border-[#46a302] text-white shadow-md flex-shrink-0">
+            <div className="p-2 sm:p-3 rounded-2xl bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 border-b-4 border-blue-800 text-white shadow-md flex-shrink-0">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-[#58cc02]/20 text-[#58cc02] border border-[#58cc02]/40">
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-sky-500/20 text-sky-300 border border-sky-400/30">
                   MARKETING ENCYCLOPEDIA
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold text-slate-400 bg-white/5 border border-white/10 flex items-center gap-1">
-                  <Database className="w-2.5 h-2.5 text-[#1cb0f6] flex-shrink-0" />
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold text-blue-200/70 bg-[#0c1836]/70 border border-blue-400/15 flex items-center gap-1">
+                  <Database className="w-2.5 h-2.5 text-sky-400 flex-shrink-0" />
                   <span className="truncate">Synced (v{storageStats.version})</span>
                 </span>
               </div>
-              <h2 className="text-sm sm:text-xl font-black text-white tracking-tight mt-1 leading-snug break-words">
+              <h2 className="text-sm sm:text-xl font-black text-white tracking-tight mt-1 leading-snug break-words drop-shadow-sm">
                 Ad Platforms, Strategy Books & Benchmark Field Manual
               </h2>
             </div>
@@ -164,25 +164,25 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
           
           <button
             onClick={onClose}
-            className="p-1.5 sm:p-2 rounded-2xl hover:bg-[#202f36] text-slate-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
+            className="p-1.5 sm:p-2 rounded-2xl hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* 2. Main Navigation Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 p-1 rounded-2xl bg-[#18252b] border border-white/5">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 p-1 rounded-2xl bg-[#0c1836]/70 border border-blue-400/15 backdrop-blur-sm">
           <button
             onClick={() => setActiveTab('platforms')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeTab === 'platforms'
-                ? 'bg-[#58cc02] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md'
+                : 'text-blue-200/70 hover:text-white hover:bg-white/5'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Ad Platforms</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25">
               {platforms.length}
             </span>
           </button>
@@ -191,13 +191,13 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
             onClick={() => setActiveTab('books')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeTab === 'books'
-                ? 'bg-[#58cc02] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md'
+                : 'text-blue-200/70 hover:text-white hover:bg-white/5'
             }`}
           >
             <BookMarked className="w-3.5 h-3.5" />
             <span>Marketing Books</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25">
               {books.length}
             </span>
           </button>
@@ -206,13 +206,13 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
             onClick={() => setActiveTab('formulas')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeTab === 'formulas'
-                ? 'bg-[#58cc02] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md'
+                : 'text-blue-200/70 hover:text-white hover:bg-white/5'
             }`}
           >
             <Calculator className="w-3.5 h-3.5" />
             <span>Core Formulas</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25">
               {CORE_MARKETING_METRICS.length}
             </span>
           </button>
@@ -221,13 +221,13 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
             onClick={() => setActiveTab('github-articles')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeTab === 'github-articles'
-                ? 'bg-[#58cc02] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md'
+                : 'text-blue-200/70 hover:text-white hover:bg-white/5'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Field Playbooks</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/25">
               {GITHUB_KNOWLEDGE_ARTICLES.length}
             </span>
           </button>
@@ -236,8 +236,8 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
             onClick={() => setActiveTab('glossary')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeTab === 'glossary'
-                ? 'bg-[#58cc02] text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md'
+                : 'text-blue-200/70 hover:text-white hover:bg-white/5'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" />
@@ -248,7 +248,7 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
         {/* 3. Search & Sub-Filter Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-300/50" />
             <input
               type="text"
               value={searchTerm}
@@ -260,12 +260,12 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                   ? 'Search StoryBrand, Breakthrough Advertising, Hacking Growth, Never Split Difference...'
                   : 'Search formulas, metrics, or scripts...'
               }
-              className="w-full bg-[#18252b] text-white placeholder-slate-500 text-xs font-bold pl-9 pr-4 py-2.5 rounded-2xl border-2 border-[#2b3a42] focus:border-[#58cc02] focus:outline-none transition-all"
+              className="w-full bg-[#0c1836]/80 text-white placeholder-blue-300/40 text-xs font-bold pl-9 pr-4 py-2.5 rounded-2xl border border-blue-400/25 focus:border-sky-400 focus:outline-none transition-all shadow-inner"
             />
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300/60 hover:text-white text-xs cursor-pointer"
               >
                 ✕
               </button>
@@ -290,8 +290,8 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                   onClick={() => setSelectedPlatform(pill.id)}
                   className={`px-2.5 py-1 rounded-xl font-bold text-[11px] whitespace-nowrap cursor-pointer transition-all ${
                     selectedPlatform === pill.id
-                      ? 'bg-[#1cb0f6] text-white font-black'
-                      : 'bg-[#18252b] text-slate-400 hover:text-white border border-white/5'
+                      ? 'bg-sky-400 text-[#070e24] font-black shadow-xs'
+                      : 'bg-[#0c1836]/70 text-blue-200/70 hover:text-white border border-blue-400/15'
                   }`}
                 >
                   {pill.label}
@@ -308,30 +308,30 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
           {activeTab === 'platforms' && (
             <div className="space-y-4">
               {filteredPlatforms.length === 0 ? (
-                <div className="p-8 text-center bg-[#18252b] rounded-3xl border border-white/5">
+                <div className="p-8 text-center bg-[#0c1836]/60 backdrop-blur-md rounded-3xl border border-blue-400/15">
                   <p className="text-slate-400 text-sm font-bold">No ad platforms match your search term.</p>
                 </div>
               ) : (
                 filteredPlatforms.map((platform) => (
                   <div 
                     key={platform.id}
-                    className="p-5 rounded-3xl bg-[#18252b] border-2 border-[#2b3a42] hover:border-[#1cb0f6]/50 transition-all space-y-4 shadow-sm"
+                    className="p-5 rounded-3xl bg-[#0c1836]/70 backdrop-blur-md border border-blue-400/20 hover:border-sky-400/50 hover:shadow-[0_8px_30px_rgba(56,189,248,0.12)] transition-all space-y-4 shadow-sm"
                   >
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-400/15 pb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#1cb0f6]/20 text-[#1cb0f6] border border-[#1cb0f6]/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-400/15 text-sky-300 border border-sky-400/30">
                             {platform.badge}
                           </span>
-                          <span className="text-xs text-slate-400 font-bold">
+                          <span className="text-xs text-blue-200/70 font-bold">
                             {platform.ecosystemReach}
                           </span>
                         </div>
                         <h3 className="text-lg font-black text-white mt-1">
                           {platform.platformName}
                         </h3>
-                        <p className="text-xs text-slate-300 font-semibold">
+                        <p className="text-xs text-blue-100/80 font-semibold">
                           {platform.tagline}
                         </p>
                       </div>
@@ -339,21 +339,21 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
 
                     {/* Algorithmic Core & Formats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                      <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5">
-                        <span className="text-[10px] font-black text-[#58cc02] uppercase block mb-1">
+                      <div className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15">
+                        <span className="text-[10px] font-black text-sky-400 uppercase tracking-wider block mb-1">
                           ⚡ Algorithmic Architecture
                         </span>
                         <p className="text-slate-300 font-semibold leading-relaxed">
                           {platform.algorithmicCore}
                         </p>
                       </div>
-                      <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5">
-                        <span className="text-[10px] font-black text-[#ffc800] uppercase block mb-1">
+                      <div className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15">
+                        <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider block mb-1">
                           🎯 Primary Formats
                         </span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {platform.keyFormats.map((fmt, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-white/5 rounded-lg text-[10px] font-bold text-slate-300">
+                            <span key={i} className="px-2 py-0.5 bg-blue-500/10 border border-blue-400/20 rounded-lg text-[10px] font-bold text-sky-200">
                               {fmt}
                             </span>
                           ))}
@@ -363,17 +363,17 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
 
                     {/* Metrics Benchmarks Table */}
                     <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">
+                      <span className="text-[10px] font-black text-blue-200/70 uppercase tracking-wider block mb-2">
                         📊 Target Benchmarks & Guardrails
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {platform.benchmarks.map((bm, i) => (
-                          <div key={i} className="p-3 bg-[#131f24] rounded-2xl border border-white/5 space-y-1">
+                          <div key={i} className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15 space-y-1">
                             <div className="flex flex-wrap items-baseline justify-between gap-1">
                               <span className="text-xs font-black text-white">{bm.metric}</span>
-                              <span className="text-[10px] font-bold text-[#58cc02]">{bm.healthyBenchmark}</span>
+                              <span className="text-[10px] font-bold text-sky-300">{bm.healthyBenchmark}</span>
                             </div>
-                            <p className="text-[10px] text-[#ff4b4b] font-semibold">{bm.troubleshootThreshold}</p>
+                            <p className="text-[10px] text-rose-400 font-semibold">{bm.troubleshootThreshold}</p>
                             <p className="text-[10px] text-slate-400 leading-tight">{bm.notes}</p>
                           </div>
                         ))}
@@ -382,21 +382,21 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
 
                     {/* Crisis Playbook & Boardroom BLUF Script */}
                     {platform.crisisPlaybooks.map((cp, idx) => (
-                      <div key={idx} className="p-3.5 bg-[#131f24] rounded-2xl border-2 border-[#ff4b4b]/30 space-y-2">
+                      <div key={idx} className="p-3.5 bg-[#120e24]/80 backdrop-blur-sm rounded-2xl border border-rose-500/30 space-y-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 text-xs font-black text-[#ff4b4b] min-w-0">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-rose-400 min-w-0">
                             <ShieldAlert className="w-4 h-4 flex-shrink-0" />
                             <span className="break-words">Crisis Response: {cp.situation}</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleCopyScript(`${platform.id}-${idx}`, cp.boardroomBlufScript)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[10px] font-bold transition-all cursor-pointer self-start sm:self-auto flex-shrink-0"
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white text-[10px] font-bold transition-all cursor-pointer self-start sm:self-auto flex-shrink-0 border border-white/10"
                           >
                             {copiedScriptId === `${platform.id}-${idx}` ? (
                               <>
-                                <Check className="w-3 h-3 text-[#58cc02]" />
-                                <span className="text-[#58cc02]">Copied!</span>
+                                <Check className="w-3 h-3 text-sky-400" />
+                                <span className="text-sky-400">Copied!</span>
                               </>
                             ) : (
                               <>
@@ -406,7 +406,7 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                             )}
                           </button>
                         </div>
-                        <p className="text-xs text-slate-200 italic bg-[#18252b] p-3 rounded-xl border border-white/5 font-serif leading-relaxed break-words">
+                        <p className="text-xs text-slate-200 italic bg-[#081024]/80 p-3 rounded-xl border border-blue-400/15 font-serif leading-relaxed break-words">
                           {cp.boardroomBlufScript}
                         </p>
                       </div>
@@ -421,33 +421,33 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
           {activeTab === 'books' && (
             <div className="space-y-4">
               {filteredBooks.length === 0 ? (
-                <div className="p-8 text-center bg-[#18252b] rounded-3xl border border-white/5">
+                <div className="p-8 text-center bg-[#0c1836]/60 backdrop-blur-md rounded-3xl border border-blue-400/15">
                   <p className="text-slate-400 text-sm font-bold">No books match your search term.</p>
                 </div>
               ) : (
                 filteredBooks.map((book) => (
                   <div 
                     key={book.id}
-                    className="p-5 rounded-3xl bg-[#18252b] border-2 border-[#2b3a42] hover:border-[#ffc800]/50 transition-all space-y-4 shadow-sm"
+                    className="p-5 rounded-3xl bg-[#0c1836]/70 backdrop-blur-md border border-blue-400/20 hover:border-amber-400/40 hover:shadow-[0_8px_30px_rgba(251,191,36,0.1)] transition-all space-y-4 shadow-sm"
                   >
-                    <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-3">
+                    <div className="flex items-start justify-between gap-3 border-b border-blue-400/15 pb-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl p-2 bg-[#131f24] rounded-2xl border border-white/5">
+                        <span className="text-3xl p-2.5 bg-[#081226]/80 rounded-2xl border border-blue-400/20 shadow-inner">
                           {book.coverEmoji}
                         </span>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#ffc800]/20 text-[#ffc800] border border-[#ffc800]/30">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400/15 text-amber-300 border border-amber-400/30">
                               {book.category}
                             </span>
-                            <span className="text-xs text-slate-400 font-bold">
+                            <span className="text-xs text-blue-200/70 font-bold">
                               {book.publicationYear}
                             </span>
                           </div>
                           <h3 className="text-lg font-black text-white mt-0.5">
                             {book.title}
                           </h3>
-                          <p className="text-xs text-slate-300 font-semibold">
+                          <p className="text-xs text-blue-100/80 font-semibold">
                             By {book.author}
                           </p>
                         </div>
@@ -456,16 +456,16 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
 
                     {/* Thesis & Agency Application */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                      <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5">
-                        <span className="text-[10px] font-black text-[#1cb0f6] uppercase block mb-1">
+                      <div className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15">
+                        <span className="text-[10px] font-black text-sky-400 uppercase tracking-wider block mb-1">
                           💡 Core Thesis
                         </span>
                         <p className="text-slate-300 font-semibold leading-relaxed">
                           {book.coreThesis}
                         </p>
                       </div>
-                      <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5">
-                        <span className="text-[10px] font-black text-[#58cc02] uppercase block mb-1">
+                      <div className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15">
+                        <span className="text-[10px] font-black text-blue-300 uppercase tracking-wider block mb-1">
                           💼 Agency Application
                         </span>
                         <p className="text-slate-300 font-semibold leading-relaxed">
@@ -475,14 +475,14 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                     </div>
 
                     {/* Key Takeaways */}
-                    <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">
+                    <div className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15">
+                      <span className="text-[10px] font-black text-blue-200/70 uppercase tracking-wider block mb-2">
                         🔑 Executive Takeaways
                       </span>
                       <ul className="space-y-1.5 text-xs text-slate-300 font-semibold">
                         {book.executiveKeyTakeaways.map((takeaway, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="text-[#58cc02] mt-0.5">✓</span>
+                            <span className="text-sky-400 mt-0.5 font-bold">✓</span>
                             <span>{takeaway}</span>
                           </li>
                         ))}
@@ -491,9 +491,9 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
 
                     {/* Boardroom Scripts */}
                     {book.boardroomScripts.map((scr, idx) => (
-                      <div key={idx} className="p-3 bg-[#131f24] rounded-2xl border border-white/5 space-y-1.5">
+                      <div key={idx} className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15 space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-black text-[#ffc800]">
+                          <span className="text-[11px] font-black text-amber-300">
                             Scenario: {scr.scenario}
                           </span>
                           <button
@@ -502,7 +502,7 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
                             className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white font-bold cursor-pointer"
                           >
                             {copiedScriptId === `${book.id}-${idx}` ? (
-                              <span className="text-[#58cc02]">Copied!</span>
+                              <span className="text-sky-400">Copied!</span>
                             ) : (
                               <span>Copy Script</span>
                             )}
@@ -525,25 +525,25 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
               {filteredFormulas.map((metric, i) => (
                 <div 
                   key={i}
-                  className="p-4 rounded-3xl bg-[#18252b] border-2 border-[#2b3a42] space-y-2.5"
+                  className="p-4 rounded-3xl bg-[#0c1836]/70 backdrop-blur-md border border-blue-400/20 space-y-2.5 shadow-sm"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
                     <div>
                       <h4 className="text-sm font-black text-white">{metric.name}</h4>
-                      <span className="text-xs font-black text-[#58cc02]">{metric.acronym}</span>
+                      <span className="text-xs font-black text-sky-400">{metric.acronym}</span>
                     </div>
-                    <span className="px-2.5 py-1 rounded-xl bg-[#131f24] border border-white/10 text-xs font-mono font-bold text-[#1cb0f6] break-all self-start sm:self-auto">
+                    <span className="px-2.5 py-1 rounded-xl bg-[#081226]/90 border border-blue-400/20 text-xs font-mono font-bold text-sky-300 break-all self-start sm:self-auto">
                       {metric.formula}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 font-semibold leading-relaxed break-words">{metric.description}</p>
-                  <div className="p-2.5 bg-[#131f24] rounded-2xl border border-white/5 space-y-1 text-xs">
+                  <div className="p-2.5 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15 space-y-1 text-xs">
                     <div className="flex flex-wrap items-baseline justify-between text-[11px] gap-1">
                       <span className="text-slate-400 font-bold">Benchmark:</span>
-                      <span className="text-[#58cc02] font-black">{metric.healthyBenchmark}</span>
+                      <span className="text-sky-300 font-black">{metric.healthyBenchmark}</span>
                     </div>
                     <p className="text-slate-400 text-[11px] leading-tight break-words">
-                      <span className="text-[#ffc800] font-black">Tip: </span>
+                      <span className="text-amber-300 font-black">Tip: </span>
                       {metric.beginnerTip}
                     </p>
                   </div>
@@ -558,20 +558,20 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
               {filteredArticles.map((article) => (
                 <div 
                   key={article.id}
-                  className="p-4 rounded-3xl bg-[#18252b] border-2 border-[#2b3a42] space-y-3"
+                  className="p-4 rounded-3xl bg-[#0c1836]/70 backdrop-blur-md border border-blue-400/20 space-y-3 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#1cb0f6]/20 text-[#1cb0f6] border border-[#1cb0f6]/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-400/15 text-sky-300 border border-sky-400/30">
                       {article.category}
                     </span>
-                    <span className="text-[11px] text-slate-400 font-bold">
+                    <span className="text-[11px] text-blue-200/70 font-bold">
                       {article.difficulty.toUpperCase()}
                     </span>
                   </div>
                   <h4 className="text-sm font-black text-white">{article.title}</h4>
                   <p className="text-xs text-slate-300 font-semibold">{article.summary}</p>
-                  <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5 space-y-1">
-                    <span className="text-[10px] font-black text-[#58cc02] uppercase block">
+                  <div className="p-3 bg-[#081226]/80 backdrop-blur-sm rounded-2xl border border-blue-400/15 space-y-1">
+                    <span className="text-[10px] font-black text-sky-400 uppercase tracking-wider block">
                       Boardroom Explanation Script
                     </span>
                     <p className="text-xs text-slate-200 italic font-serif leading-relaxed">
@@ -589,11 +589,11 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
               {filteredGlossary.map((item, i) => (
                 <div 
                   key={i}
-                  className="p-3.5 rounded-2xl bg-[#18252b] border border-white/5 space-y-1.5"
+                  className="p-3.5 rounded-2xl bg-[#0c1836]/70 backdrop-blur-md border border-blue-400/15 hover:border-blue-400/35 transition-all space-y-1.5 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-white">{item.term}</span>
-                    <span className="text-[10px] font-bold text-[#1cb0f6] uppercase">{item.category}</span>
+                    <span className="text-[10px] font-bold text-sky-400 uppercase">{item.category}</span>
                   </div>
                   <p className="text-xs text-slate-300 font-semibold">{item.shortDefinition}</p>
                   <p className="text-[11px] text-slate-400 italic">"{item.executiveExample}"</p>
@@ -604,15 +604,15 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
         </div>
 
         {/* 5. Footer */}
-        <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 text-xs text-slate-400 font-bold">
+        <div className="pt-3 border-t border-blue-400/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 text-xs text-slate-400 font-bold">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="w-2 h-2 rounded-full bg-[#58cc02] flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] flex-shrink-0" />
             <span className="truncate sm:whitespace-normal">Indexed in LocalStorage for Instant Offline Access</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="btn-3d-green px-5 py-2.5 rounded-xl text-xs font-black text-white cursor-pointer self-stretch sm:self-auto text-center"
+            className="btn-3d-blue px-6 py-2.5 rounded-xl text-xs font-black text-white cursor-pointer self-stretch sm:self-auto text-center"
           >
             GOT IT
           </button>

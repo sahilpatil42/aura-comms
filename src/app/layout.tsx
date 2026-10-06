@@ -8,8 +8,8 @@ export const viewport: Viewport = {
   userScalable: true,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#131f24" },
-    { media: "(prefers-color-scheme: light)", color: "#131f24" },
+    { media: "(prefers-color-scheme: dark)", color: "#070d1e" },
+    { media: "(prefers-color-scheme: light)", color: "#070d1e" },
   ],
   interactiveWidget: "resizes-content",
 };
@@ -49,7 +49,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#131f24] text-slate-100 font-sans min-h-screen w-full selection:bg-[#58cc02] selection:text-white flex flex-col antialiased">
+      <body className="bg-[#070d1e] text-slate-100 font-sans min-h-screen w-full selection:bg-[#38bdf8] selection:text-[#070d1e] flex flex-col antialiased">
         {children}
       </body>
     </html>

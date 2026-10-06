@@ -51,27 +51,27 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="card-glass w-full max-w-lg rounded-3xl border border-white/10 p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl max-h-[88dvh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#040817]/75 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-lg bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-[0_20px_60px_rgba(3,7,24,0.7)] ring-1 ring-white/10 max-h-[88dvh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-blue-400/15 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+            <div className="p-2.5 rounded-xl bg-blue-500/15 border border-blue-400/30 text-sky-400 shadow-sm">
               <Key className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">
                 Intelligence & Audio Settings
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-blue-200/70">
                 Zero-cost developer configuration for Google Gemini and browser speech
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-blue-900/40 text-blue-300/60 hover:text-white transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -80,14 +80,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
         {/* Gemini API Key */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+            <label className="text-xs font-bold uppercase tracking-wider text-blue-200/80">
               Google AI Studio API Key (Free Tier)
             </label>
             <a
               href="https://aistudio.google.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium"
+              className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium"
             >
               Get Free Key <ExternalLink className="w-3 h-3" />
             </a>
@@ -99,22 +99,22 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Paste AI Studio Key (or leave blank for high-fidelity fallback)..."
-              className="w-full bg-slate-950/90 text-white placeholder-slate-500 text-xs px-4 py-3 rounded-xl border border-white/10 focus:outline-none focus:border-indigo-500 transition-colors box-border"
+              className="w-full bg-[#081226]/80 text-white placeholder-blue-300/40 text-xs px-4 py-3 rounded-xl border border-blue-400/20 focus:outline-none focus:border-sky-400 transition-colors box-border"
             />
           </div>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-blue-200/60">
             AURA-Comms has a built-in deterministic high-fidelity agency reasoning engine that works with $0 token overhead out of the box even without an API key!
           </p>
         </div>
 
         {/* Speech & Audio Controls */}
-        <div className="space-y-3 pt-3 border-t border-white/10">
+        <div className="space-y-3 pt-3 border-t border-blue-400/15">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <Volume2 className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-200/80 flex items-center gap-1.5">
+              <Volume2 className="w-4 h-4 text-sky-400" />
               AI Agent Voice Selection
             </span>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-blue-300/60">
               Only selected agent speaks
             </span>
           </div>
@@ -136,8 +136,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                   }}
                   className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
                     isSelected
-                      ? 'bg-indigo-950/60 border-indigo-500 shadow-xs'
-                      : 'bg-slate-950/60 hover:bg-slate-900 border-white/5'
+                      ? 'bg-blue-600/20 border-sky-400/60 shadow-xs'
+                      : 'bg-[#081226]/80 hover:bg-[#0c1836] border-blue-400/15'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -148,12 +148,12 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-white">{v.name}</span>
                         {isSelected && (
-                          <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-indigo-500 text-white">
+                          <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-sky-500 text-white">
                             Selected
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-slate-400 truncate max-w-[240px]">
+                      <p className="text-[10px] text-blue-200/60 truncate max-w-[240px]">
                         {v.tone}
                       </p>
                     </div>
@@ -177,7 +177,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                     className={`p-1.5 rounded-lg border transition-all cursor-pointer flex-shrink-0 ${
                       isPreviewing
                         ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-pulse'
-                        : 'bg-slate-800 hover:bg-slate-700 border-white/10 text-indigo-400'
+                        : 'bg-blue-950/60 hover:bg-blue-900 border-blue-400/20 text-sky-400'
                     }`}
                     title={isPreviewing ? 'Stop Preview' : `Listen to ${v.name} preview`}
                   >
@@ -188,13 +188,13 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
             })}
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs mt-3">
-            <span className="text-slate-300">Auto-Speak Client Spoken Audio</span>
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#081226]/80 border border-blue-400/15 text-xs mt-3">
+            <span className="text-blue-100/80">Auto-Speak Client Spoken Audio</span>
             <input
               type="checkbox"
               checked={autoSpeakClient}
               onChange={(e) => setAutoSpeakClient(e.target.checked)}
-              className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+              className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
             />
           </div>
         </div>
@@ -204,38 +204,37 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
         <DeviceDiagnosticBanner />
 
         {/* Supabase Integration */}
-        <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-between text-xs">
+        <div className="p-3.5 rounded-xl bg-[#081226]/80 border border-blue-400/15 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-indigo-400" />
+            <Database className="w-4 h-4 text-sky-400" />
             <div>
-              <span className="text-slate-200 font-semibold block">Supabase Storage</span>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-white font-semibold block">Supabase Storage</span>
+              <span className="text-[10px] text-blue-200/60">
                 {isSupabaseConfigured ? 'Connected with Row-Level Security' : 'Local In-Memory / Safe Sandbox Mode'}
               </span>
             </div>
           </div>
           <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-            isSupabaseConfigured ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'
+            isSupabaseConfigured ? 'bg-sky-500/20 text-sky-300 border border-sky-400/30' : 'bg-blue-950/60 text-blue-300/60 border border-blue-400/15'
           }`}>
             {isSupabaseConfigured ? 'Active' : 'Offline Mode'}
           </span>
         </div>
 
-
         {/* Actions */}
         <div className="pt-2 flex items-center justify-between">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-[#0c1836] hover:bg-[#13234d] border border-blue-400/20 text-blue-200 text-xs font-semibold cursor-pointer"
           >
             Cancel
           </button>
 
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 px-6 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/25 cursor-pointer"
+            className="btn-3d-blue flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-white text-xs font-bold cursor-pointer"
           >
-            {isSaved ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+            {isSaved ? <Check className="w-3.5 h-3.5 text-sky-200" /> : <ShieldCheck className="w-3.5 h-3.5" />}
             <span>{isSaved ? 'Settings Saved' : 'Save Preferences'}</span>
           </button>
         </div>

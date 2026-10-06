@@ -92,7 +92,7 @@ export const useGamificationStore = create<GamificationState>()(
       completedNodeIds: ['node-1', 'node-2'],
       activeNodeId: 'node-3', // "Module 3: The CPL Spike Crisis"
       userAvatar: '🦉',
-      userAvatarColor: '#58cc02',
+      userAvatarColor: '#2563eb',
       userName: 'Sahil M.',
       userHandle: '@sahil_media',
       activeTrackId: 'google-ads',

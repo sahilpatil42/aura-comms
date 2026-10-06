@@ -314,13 +314,13 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3]" />
         </button>
 
-        {/* Floating Duolingo Animated Green Progress Bar */}
-        <div className="flex-1 h-3.5 sm:h-4 bg-[#202f36] rounded-full overflow-hidden p-0.5 border border-white/5 min-w-[70px]">
+        {/* Floating Soothing Blue Animated Progress Bar */}
+        <div className="flex-1 h-3.5 sm:h-4 bg-[#0b1633]/80 rounded-full overflow-hidden p-0.5 border border-blue-400/20 min-w-[70px] shadow-inner">
           <div
-            className="h-full bg-gradient-to-r from-[#58cc02] to-[#61e002] rounded-full transition-all duration-500 shadow-sm relative overflow-hidden"
+            className="h-full bg-gradient-to-r from-[#1d4ed8] via-[#3b82f6] to-[#38bdf8] rounded-full transition-all duration-500 shadow-sm relative overflow-hidden"
             style={{ width: `${progressPercent}%` }}
           >
-            <div className="absolute inset-0 bg-white/20 w-1/2 rounded-full" />
+            <div className="absolute inset-0 bg-white/25 w-1/2 rounded-full" />
           </div>
         </div>
 
@@ -331,15 +331,15 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             setShowMicTestModal(true);
             runMicDiagnostic();
           }}
-          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#202f36] hover:bg-[#283942] border border-white/5 text-xs font-black text-slate-300 hover:text-white cursor-pointer transition-all shadow-sm flex-shrink-0"
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#0c1938]/70 hover:bg-[#12234e] border border-blue-400/20 text-xs font-black text-blue-200 hover:text-white cursor-pointer transition-all shadow-sm flex-shrink-0"
           title="Test Microphone Hardware & Permissions"
         >
-          <Mic className="w-3.5 h-3.5 text-[#1cb0f6]" />
+          <Mic className="w-3.5 h-3.5 text-sky-400" />
           <span className="hidden sm:inline">Mic Check</span>
         </button>
 
         {/* Energy / Hearts */}
-        <div className="flex items-center gap-1 text-xs sm:text-sm font-black text-[#ff4b4b] flex-shrink-0">
+        <div className="flex items-center gap-1 text-xs sm:text-sm font-black text-rose-400 flex-shrink-0">
           <span className="text-base sm:text-xl">❤️</span>
           <span>{hearts}</span>
         </div>
@@ -351,31 +351,31 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
         <div className="flex items-start gap-2.5 sm:gap-4">
           {/* Character Illustration Card */}
           <div className="flex flex-col items-center flex-shrink-0">
-            <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-[#ff4b4b] to-[#ff9600] border-2 sm:border-4 border-[#18252b] flex items-center justify-center text-xl sm:text-4xl shadow-xl relative">
+            <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] border-2 sm:border-4 border-[#070e24] flex items-center justify-center text-xl sm:text-4xl shadow-xl relative">
               <span>👨‍💼</span>
               {isClientSpeaking && (
                 <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 sm:h-4 sm:w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1cb0f6] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 bg-[#1cb0f6] border-2 border-[#18252b]"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 bg-sky-400 border-2 border-[#070e24]"></span>
                 </span>
               )}
             </div>
             <span className="text-[10px] sm:text-[11px] font-black text-white mt-1 uppercase tracking-wide truncate max-w-[65px] sm:max-w-none text-center">
               {activeScenario.stakeholder?.name || 'CMO Alex'}
             </span>
-            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400">
+            <span className="text-[8px] sm:text-[9px] font-bold text-blue-300/60">
               Enterprise CMO
             </span>
           </div>
 
           {/* Speech Bubble with Tail */}
-          <div className="relative flex-1 bg-[#202f36] border-2 border-[#37464f] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg min-w-0">
+          <div className="relative flex-1 bg-[#0a1532]/85 backdrop-blur-2xl border border-blue-400/25 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xl min-w-0 ring-1 ring-white/10">
             {/* Speech bubble pointer tail */}
             <div className="speech-bubble-tail-left hidden sm:block" />
 
             <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 mb-2">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider text-[#ff4b4b] bg-[#ff4b4b]/15 px-2 py-0.5 rounded-md truncate">
+                <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider text-rose-300 bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded-md truncate">
                   Client Crisis Objection
                 </span>
 
@@ -386,14 +386,14 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                     soundEffects.playClick();
                     setShowVoicePicker(true);
                   }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#18252b] hover:bg-[#283942] border border-[#1cb0f6]/30 text-[10px] sm:text-[11px] font-black text-slate-200 hover:text-white transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#09132c]/80 hover:bg-[#112046] border border-blue-400/30 text-[10px] sm:text-[11px] font-black text-blue-100 hover:text-white transition-all cursor-pointer shadow-xs"
                   title="Choose which AI Agent voice speaks"
                 >
                   <span className="text-xs">
                     {SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.gender === 'female' ? '👩' : '👨'}
                   </span>
-                  <span>Agent: <strong className="text-[#1cb0f6]">{SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.name || 'Jenny'}</strong></span>
-                  <span className="text-[9px] text-[#1cb0f6]">▼</span>
+                  <span>Agent: <strong className="text-sky-300">{SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.name || 'Jenny'}</strong></span>
+                  <span className="text-[9px] text-sky-400">▼</span>
                 </button>
               </div>
 
@@ -418,10 +418,10 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                 }}
                 className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-black border transition-all cursor-pointer flex-shrink-0 ${
                   isClientSpeaking
-                    ? 'bg-[#ff4b4b]/20 border-[#ff4b4b] text-[#ff4b4b] hover:bg-[#ff4b4b]/30 shadow-sm animate-pulse'
+                    ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm animate-pulse'
                     : !hasUserPlayedAudio
-                    ? 'bg-[#1cb0f6]/20 border-[#1cb0f6] text-[#1cb0f6] shadow-sm animate-pulse'
-                    : 'bg-[#131f24] hover:bg-[#18252b] text-[#1cb0f6] border-white/5'
+                    ? 'bg-sky-500/20 border-sky-400/40 text-sky-300 shadow-sm animate-pulse'
+                    : 'bg-[#0e1c3c]/70 hover:bg-[#142650] text-sky-300 border-blue-400/20'
                 }`}
                 title={isClientSpeaking ? 'Stop Playing' : 'Listen with Selected AI Voice'}
               >
@@ -448,11 +448,11 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
         {/* Director Pro-Framing Suggestion Chips */}
         <div className="space-y-1.5 sm:space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-black">
-            <span className="text-[#ffc800] uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 fill-[#ffc800] flex-shrink-0" />
+            <span className="text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 fill-amber-300 flex-shrink-0" />
               <span>Director Pro-Framing</span>
             </span>
-            <span className="text-slate-400 text-[10px]">
+            <span className="text-blue-300/60 text-[10px]">
               Tap chip to insert
             </span>
           </div>
@@ -466,12 +466,12 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs up 28%. We deployed 3 refreshed video variants with a 20% budget cap to stabilize costs."
                 );
               }}
-              className="text-left p-2.5 sm:p-3 rounded-2xl bg-[#18252b] hover:bg-[#202f36] border-2 border-[#202f36] hover:border-[#58cc02] transition-all cursor-pointer text-xs group break-words min-w-0"
+              className="text-left p-2.5 sm:p-3 rounded-2xl bg-[#0c1838]/70 hover:bg-[#12234e] border border-blue-400/20 hover:border-sky-400/40 transition-all cursor-pointer text-xs group break-words min-w-0 backdrop-blur-sm"
             >
-              <span className="text-[10px] font-black uppercase text-[#58cc02] block mb-0.5">
+              <span className="text-[10px] font-black uppercase text-sky-300 block mb-0.5">
                 ★ Recommended: BLUF First
               </span>
-              <span className="text-slate-300 font-bold group-hover:text-white line-clamp-2 leading-relaxed">
+              <span className="text-blue-200/80 font-semibold group-hover:text-white line-clamp-2 leading-relaxed">
                 "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs up 28%..."
               </span>
             </button>
@@ -484,12 +484,12 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   "Pausing all campaigns will reset Meta's algorithmic learning phase. Instead, we have isolated the fatigued ad sets and reallocated 60% of budget into lookalike scaling."
                 );
               }}
-              className="text-left p-2.5 sm:p-3 rounded-2xl bg-[#18252b] hover:bg-[#202f36] border-2 border-[#202f36] hover:border-[#1cb0f6] transition-all cursor-pointer text-xs group break-words min-w-0"
+              className="text-left p-2.5 sm:p-3 rounded-2xl bg-[#0c1838]/70 hover:bg-[#12234e] border border-blue-400/20 hover:border-sky-400/40 transition-all cursor-pointer text-xs group break-words min-w-0 backdrop-blur-sm"
             >
-              <span className="text-[10px] font-black uppercase text-[#1cb0f6] block mb-0.5">
+              <span className="text-[10px] font-black uppercase text-cyan-300 block mb-0.5">
                 ★ Algorithm Defense
               </span>
-              <span className="text-slate-300 font-bold group-hover:text-white line-clamp-2 leading-relaxed">
+              <span className="text-blue-200/80 font-semibold group-hover:text-white line-clamp-2 leading-relaxed">
                 "Pausing all campaigns will reset Meta's algorithmic learning phase. Instead, we reallocated..."
               </span>
             </button>
@@ -512,26 +512,26 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   ? `🎤 Listening (${micVolume}%)... Words stream live here`
                   : '🎤 Speak now... Words will appear live here!'
                 : inputMode === 'voice'
-                ? 'Tap the green microphone below and speak your response...'
+                ? 'Tap the glowing microphone below and speak your response...'
                 : 'Type your executive BLUF response here...'
             }
-            className={`w-full bg-[#18252b] text-white placeholder-slate-500 text-sm sm:text-base font-bold p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border-2 transition-all focus:outline-none resize-none leading-relaxed min-h-[105px] sm:min-h-[125px] ${
+            className={`w-full bg-[#08122a]/90 backdrop-blur-xl text-white placeholder-blue-300/40 text-sm sm:text-base font-bold p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border-2 transition-all focus:outline-none resize-none leading-relaxed min-h-[105px] sm:min-h-[125px] ring-1 ring-white/10 ${
               isRecording
-                ? 'border-[#58cc02] shadow-[0_0_15px_rgba(88,204,2,0.2)]'
-                : 'border-[#37464f] focus:border-[#1cb0f6]'
+                ? 'border-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.35)]'
+                : 'border-blue-400/25 focus:border-sky-400'
             }`}
           />
 
           {/* Word count & auto-stop status indicator */}
-          <div className="flex items-center justify-between px-3 pt-1 text-[11px] font-bold text-slate-400">
+          <div className="flex items-center justify-between px-3 pt-1 text-[11px] font-bold text-blue-200/60">
             <div className="flex items-center gap-1.5 min-w-0 truncate">
               {isRecording ? (
-                <span className="text-[#58cc02] flex items-center gap-1 min-w-0 truncate">
-                  <span className="w-2 h-2 rounded-full bg-[#58cc02] animate-ping flex-shrink-0" />
+                <span className="text-sky-300 flex items-center gap-1 min-w-0 truncate">
+                  <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping flex-shrink-0" />
                   <span className="truncate">Auto-transcribing · Stops on pause</span>
                 </span>
               ) : textInput.trim() ? (
-                <span className="text-slate-300 truncate">
+                <span className="text-blue-200/90 truncate">
                   {textInput.split(/\s+/).filter(Boolean).length} words
                 </span>
               ) : (
@@ -543,7 +543,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             <button
               type="button"
               onClick={() => setInputMode(inputMode === 'voice' ? 'text' : 'voice')}
-              className="text-[#1cb0f6] hover:underline flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2"
+              className="text-sky-300 hover:text-white flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2 transition-colors"
             >
               {inputMode === 'voice' ? (
                 <>
@@ -562,19 +562,19 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
 
         {/* Real-time volume visualizer while recording */}
         {isRecording && (
-          <div className="flex items-center justify-between px-3 sm:px-4 py-2 rounded-2xl bg-[#18252b] border border-[#58cc02]/30 text-xs font-bold text-slate-300 animate-in fade-in">
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2 rounded-2xl bg-[#0c1938]/80 backdrop-blur-md border border-sky-400/35 text-xs font-bold text-blue-200 animate-in fade-in">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#58cc02] animate-ping" />
-              <span className="text-[#58cc02] font-black text-[11px] sm:text-xs">MIC:</span>
-              <div className="w-24 sm:w-40 h-2 bg-[#131f24] rounded-full overflow-hidden">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping" />
+              <span className="text-sky-300 font-black text-[11px] sm:text-xs">MIC:</span>
+              <div className="w-24 sm:w-40 h-2 bg-[#060c1e] rounded-full overflow-hidden border border-white/10">
                 <div
-                  className="h-full bg-gradient-to-r from-[#58cc02] to-[#1cb0f6] transition-all duration-75"
+                  className="h-full bg-gradient-to-r from-[#1d4ed8] via-[#3b82f6] to-[#38bdf8] transition-all duration-75"
                   style={{ width: `${Math.max(10, micVolume)}%` }}
                 />
               </div>
-              <span className="text-[10px] text-slate-400 font-mono">{micVolume}%</span>
+              <span className="text-[10px] text-sky-300 font-mono">{micVolume}%</span>
             </div>
-            <span className="text-[10px] sm:text-[11px] text-slate-400">
+            <span className="text-[10px] sm:text-[11px] text-blue-300/70">
               Speak clearly
             </span>
           </div>
@@ -582,7 +582,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
 
         {/* Informative Mic Notice Banner */}
         {micNotice && (
-          <div className="px-3 sm:px-4 py-2.5 rounded-2xl bg-[#18252b] border-2 border-[#1cb0f6]/30 text-[#1cb0f6] text-xs font-bold flex flex-wrap items-center justify-between gap-2 animate-in fade-in">
+          <div className="px-3 sm:px-4 py-2.5 rounded-2xl bg-[#0c1a3a]/85 backdrop-blur-md border border-sky-400/35 text-sky-200 text-xs font-bold flex flex-wrap items-center justify-between gap-2 animate-in fade-in">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <span className="flex-shrink-0">🎙️</span>
               <span className="text-[11px] sm:text-xs break-words">{micNotice}</span>
@@ -598,7 +598,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                     setTextInput(gold);
                     setMicNotice(null);
                   }}
-                  className="px-2.5 py-1 rounded-xl bg-[#58cc02] text-white text-[10px] font-black hover:brightness-110 transition-all cursor-pointer shadow-sm"
+                  className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-black hover:brightness-110 transition-all cursor-pointer shadow-sm"
                 >
                   ⚡ Insert BLUF
                 </button>
@@ -606,7 +606,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
               <button
                 type="button"
                 onClick={() => setMicNotice(null)}
-                className="text-slate-400 hover:text-white underline text-xs cursor-pointer p-1"
+                className="text-blue-300/60 hover:text-white underline text-xs cursor-pointer p-1"
               >
                 ✕
               </button>
@@ -620,18 +620,18 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             {/* Animated Waveform Ripple Rings while Recording */}
             {isRecording && (
               <div className="absolute flex items-center justify-center pointer-events-none">
-                <span className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#58cc02]/20 animate-ping" />
-                <span className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#58cc02]/10 animate-pulse absolute" />
+                <span className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-400/25 animate-ping" />
+                <span className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-blue-500/15 animate-pulse absolute" />
               </div>
             )}
 
             <button
               type="button"
               onClick={toggleRecording}
-              className={`relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-xl active:scale-95 ${
+              className={`relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-2xl active:scale-95 ${
                 isRecording
-                  ? 'bg-[#ff4b4b] border-b-[5px] sm:border-b-[6px] border-[#ea2b2b] text-white animate-voice-pulse'
-                  : 'bg-[#58cc02] border-b-[5px] sm:border-b-[6px] border-[#46a302] text-white hover:brightness-110 active:translate-y-1 active:border-b-2'
+                  ? 'bg-rose-500 border-b-[5px] sm:border-b-[6px] border-rose-700 text-white animate-voice-pulse shadow-[0_10px_30px_rgba(244,63,94,0.4)]'
+                  : 'bg-gradient-to-tr from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] border-b-[5px] sm:border-b-[6px] border-[#1e3a8a] text-white hover:brightness-110 active:translate-y-1 active:border-b-2 shadow-[0_10px_30px_rgba(37,99,235,0.45)]'
               }`}
               title={isRecording ? 'Click to stop manually' : 'Click to Speak (Microphone)'}
             >
@@ -642,7 +642,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
               )}
             </button>
 
-            <span className="text-[10px] sm:text-xs font-black text-slate-300 mt-2 tracking-wide">
+            <span className="text-[10px] sm:text-xs font-black text-blue-200/80 mt-2 tracking-wide">
               {isRecording ? 'TAP TO STOP (OR PAUSE 3s)' : 'TAP TO SPEAK'}
             </span>
           </div>
@@ -655,8 +655,8 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           disabled={!textInput.trim() || isSubmitting}
           className={`w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-black tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
             textInput.trim() && !isSubmitting
-              ? 'btn-3d-green shadow-xl active:scale-[0.99]'
-              : 'bg-[#202f36] border-b-4 border-[#293840] text-slate-500 cursor-not-allowed'
+              ? 'btn-3d-blue shadow-xl active:scale-[0.99]'
+              : 'bg-[#0a1532]/70 border-b-4 border-blue-950 text-blue-300/40 cursor-not-allowed'
           }`}
         >
           {isSubmitting ? (
@@ -675,18 +675,18 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
 
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-6 text-center space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#040817]/75 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-6 text-center space-y-4 shadow-[0_20px_60px_rgba(3,7,24,0.7)] ring-1 ring-white/10">
             <span className="text-4xl">🦉</span>
             <h3 className="text-xl font-black text-white">Wait, don't leave!</h3>
-            <p className="text-xs font-bold text-slate-300">
+            <p className="text-xs font-semibold text-blue-200/80">
               You'll lose your progress on this scenario if you exit now.
             </p>
             <div className="space-y-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
-                className="btn-3d-green w-full py-3 rounded-2xl text-xs font-black"
+                className="btn-3d-blue w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
               >
                 KEEP PRACTICING
               </button>
@@ -696,7 +696,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   setShowExitConfirm(false);
                   onExit();
                 }}
-                className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black"
+                className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
               >
                 END SESSION
               </button>
@@ -707,21 +707,21 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
 
       {/* Microphone Hardware & Browser Diagnostic Modal */}
       {showMicTestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl max-h-[88dvh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#040817]/75 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-md bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-4 sm:p-6 space-y-4 shadow-[0_20px_60px_rgba(3,7,24,0.7)] max-h-[88dvh] overflow-y-auto ring-1 ring-white/10">
 
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎙️</span>
                 <div>
                   <h3 className="text-base font-black text-white">Microphone Diagnostic</h3>
-                  <p className="text-[11px] text-slate-400 font-semibold">Verify mic hardware and browser permissions</p>
+                  <p className="text-[11px] text-blue-200/70 font-semibold">Verify mic hardware and browser permissions</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowMicTestModal(false)}
-                className="p-1.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
               >
                 ✕
               </button>
@@ -731,40 +731,40 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             <div className="space-y-2.5 text-xs font-bold">
               {isTestingMic ? (
                 <div className="p-6 text-center space-y-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#1cb0f6] mx-auto" />
-                  <p className="text-slate-300">Checking audio device and browser speech permissions...</p>
+                  <Loader2 className="w-6 h-6 animate-spin text-sky-400 mx-auto" />
+                  <p className="text-blue-200/80">Checking audio device and browser speech permissions...</p>
                 </div>
               ) : micTestResult ? (
                 <>
-                  <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-300">Microphone Permission:</span>
-                    <span className={`flex items-center gap-1 ${micTestResult.hasHardwareMic ? 'text-[#58cc02]' : 'text-[#ff4b4b]'}`}>
+                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 flex items-center justify-between">
+                    <span className="text-blue-200/80">Microphone Permission:</span>
+                    <span className={`flex items-center gap-1 ${micTestResult.hasHardwareMic ? 'text-sky-400' : 'text-rose-400'}`}>
                       {micTestResult.hasHardwareMic ? '✓ Allowed & Active' : '✕ Blocked or Missing'}
                     </span>
                   </div>
 
-                  <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-300">Active Audio Device:</span>
+                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 flex items-center justify-between">
+                    <span className="text-blue-200/80">Active Audio Device:</span>
                     <span className="text-slate-200 font-mono text-[11px] truncate max-w-[180px]">
                       {micTestResult.activeDeviceName || 'Default System Mic'}
                     </span>
                   </div>
 
-                  <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5 flex items-center justify-between">
-                    <span className="text-slate-300">Web Speech API (Chrome/Edge):</span>
-                    <span className={`flex items-center gap-1 ${micTestResult.hasWebSpeech ? 'text-[#58cc02]' : 'text-[#ff9600]'}`}>
+                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 flex items-center justify-between">
+                    <span className="text-blue-200/80">Web Speech API (Chrome/Edge):</span>
+                    <span className={`flex items-center gap-1 ${micTestResult.hasWebSpeech ? 'text-sky-400' : 'text-amber-400'}`}>
                       {micTestResult.hasWebSpeech ? '✓ Supported' : '⚠️ Restricted (Use Keyboard)'}
                     </span>
                   </div>
 
                   {micTestResult.error && (
-                    <div className="p-3 bg-[#ff4b4b]/10 border border-[#ff4b4b]/30 rounded-2xl text-[11px] text-[#ff4b4b]">
+                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-[11px] text-rose-300">
                       <strong>Issue Detected: </strong>{micTestResult.error}
                     </div>
                   )}
 
-                  <div className="p-3 bg-[#131f24] rounded-2xl border border-white/5 text-[11px] text-slate-300 space-y-1">
-                    <span className="text-[#ffc800] font-black block">💡 Troubleshooting Tips:</span>
+                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 text-[11px] text-blue-200/80 space-y-1">
+                    <span className="text-amber-300 font-black block">💡 Troubleshooting Tips:</span>
                     <p>• If using <strong>Brave</strong>, click Shields and allow Google speech recognition services.</p>
                     <p>• In <strong>Windows Settings</strong>, ensure "Microphone access for apps" is enabled.</p>
                     <p>• You can always use <strong>"⚡ Insert BLUF Answer"</strong> or <strong>Keyboard Mode</strong> to practice uninterrupted.</p>
@@ -772,7 +772,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                 </>
               ) : (
                 <div className="p-4 text-center">
-                  <p className="text-slate-400">Click below to test your microphone device.</p>
+                  <p className="text-blue-300/60">Click below to test your microphone device.</p>
                 </div>
               )}
             </div>
@@ -782,14 +782,14 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                 type="button"
                 onClick={runMicDiagnostic}
                 disabled={isTestingMic}
-                className="btn-3d-blue flex-1 py-3 rounded-2xl text-xs font-black text-white"
+                className="btn-3d-blue flex-1 py-3 rounded-2xl text-xs font-black text-white cursor-pointer"
               >
                 {isTestingMic ? 'TESTING...' : 'RE-TEST MICROPHONE'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowMicTestModal(false)}
-                className="btn-3d-neutral px-5 py-3 rounded-2xl text-xs font-black"
+                className="btn-3d-neutral px-5 py-3 rounded-2xl text-xs font-black cursor-pointer"
               >
                 CLOSE
               </button>
@@ -806,18 +806,18 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             setPreviewVoiceId(null);
             setShowVoicePicker(false);
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#040817]/75 backdrop-blur-md animate-in fade-in select-none"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-[#18252b] border-2 border-[#37464f] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[88dvh] overflow-y-auto"
+            className="w-full max-w-md bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-5 sm:p-6 space-y-4 shadow-[0_20px_60px_rgba(3,7,24,0.7)] max-h-[88dvh] overflow-y-auto ring-1 ring-white/10"
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎙️</span>
                 <div>
                   <h3 className="text-base font-black text-white">Select AI Agent Voice</h3>
-                  <p className="text-[11px] text-slate-400 font-semibold">Only your chosen agent will read the problem statement</p>
+                  <p className="text-[11px] text-blue-200/70 font-semibold">Only your chosen agent will read the problem statement</p>
                 </div>
               </div>
               <button
@@ -828,7 +828,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   setPreviewVoiceId(null);
                   setShowVoicePicker(false);
                 }}
-                className="p-1.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
               >
                 ✕
               </button>
@@ -859,13 +859,13 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                     }}
                     className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
                       isSelected
-                        ? 'bg-[#1cb0f6]/15 border-[#1cb0f6] shadow-sm'
-                        : 'bg-[#131f24] hover:bg-[#202f36] border-white/5 hover:border-white/20'
+                        ? 'bg-blue-600/20 border-sky-400/80 shadow-md ring-1 ring-sky-400/30'
+                        : 'bg-[#0c1836]/70 hover:bg-[#12234e] border-blue-400/15 hover:border-blue-400/30 backdrop-blur-sm'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 ${
-                        isSelected ? 'bg-[#1cb0f6] text-white' : 'bg-[#202f36] text-slate-300'
+                        isSelected ? 'bg-gradient-to-tr from-blue-600 to-sky-400 text-white shadow-sm' : 'bg-[#09132c] text-blue-200'
                       }`}>
                         {v.gender === 'female' ? '👩' : '👨'}
                       </div>
@@ -873,12 +873,12 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black text-white">{v.name}</span>
                           {isSelected && (
-                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-[#1cb0f6] text-white">
+                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-sky-400 text-[#070e24]">
                               Active Agent
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-400 font-semibold truncate max-w-[210px]">
+                        <p className="text-[11px] text-blue-200/70 font-semibold truncate max-w-[210px]">
                           {v.tone}
                         </p>
                       </div>
@@ -902,8 +902,8 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                       }}
                       className={`p-2 rounded-xl border transition-all cursor-pointer flex-shrink-0 ${
                         isPreviewing
-                          ? 'bg-[#ff4b4b]/20 border-[#ff4b4b] text-[#ff4b4b] animate-pulse'
-                          : 'bg-[#202f36] hover:bg-[#283942] border-white/10 text-[#1cb0f6]'
+                          ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse'
+                          : 'bg-[#09132c] hover:bg-[#112046] border-blue-400/20 text-sky-400'
                       }`}
                       title={isPreviewing ? 'Stop Preview' : `Listen to ${v.name} sample`}
                     >
@@ -923,7 +923,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   setPreviewVoiceId(null);
                   setShowVoicePicker(false);
                 }}
-                className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black"
+                className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
               >
                 DONE
               </button>
