@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGamificationStore } from '@/stores/useGamificationStore';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { soundEffects } from '@/lib/soundEffects';
 import { AD_PLATFORMS, getPlatformById, AdPlatformInfo } from '@/data/adPlatforms';
+import { Brain } from 'lucide-react';
+import { AIBrainModal } from '@/components/duo/AIBrainModal';
 
 interface DuoHeaderProps {
   currentTab: 'path' | 'leaderboard' | 'quests' | 'shop' | 'profile';
@@ -36,6 +38,20 @@ export const DuoHeader: React.FC<DuoHeaderProps> = ({
   const [showHeartsModal, setShowHeartsModal] = useState(false);
   const [showGemsModal, setShowGemsModal] = useState(false);
   const [showPlatformModal, setShowPlatformModal] = useState(false);
+  const [showAiBrainModal, setShowAiBrainModal] = useState(false);
+  const [hasGeminiKey, setHasGeminiKey] = useState(false);
+
+  useEffect(() => {
+    const localKey = typeof window !== 'undefined' ? localStorage.getItem('AURA_GEMINI_KEY') || '' : '';
+    if (localKey && localKey.trim().length > 0) {
+      setHasGeminiKey(true);
+    } else {
+      fetch('/api/config/key')
+        .then((r) => r.json())
+        .then((d) => { if (d.hasKey) setHasGeminiKey(true); })
+        .catch(() => {});
+    }
+  }, []);
 
   const currentPlatform = getPlatformById(selectedPlatform || 'google-ads');
 
@@ -142,6 +158,26 @@ export const DuoHeader: React.FC<DuoHeaderProps> = ({
               <span className="text-sm sm:text-lg leading-none">❤️</span>
               <span className="font-black text-[11px] sm:text-sm text-[#f87171] tracking-wide">
                 {hearts}/{maxHearts}
+              </span>
+            </button>
+
+            {/* AI Brain (LLM Cognitive Engine) */}
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                setShowAiBrainModal(true);
+              }}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl backdrop-blur-md border transition-all cursor-pointer shadow-xs ${
+                hasGeminiKey 
+                  ? 'bg-purple-950/60 hover:bg-purple-900/80 border-purple-400/50 text-purple-200 shadow-purple-900/30' 
+                  : 'bg-[#0d1b3a]/60 hover:bg-[#132754]/80 border-purple-400/25 text-purple-300'
+              }`}
+              title="Configure LLM Cognitive Engine (Google Gemini)"
+            >
+              <span className="text-sm sm:text-base leading-none">🧠</span>
+              <span className="font-black text-[10px] sm:text-xs tracking-wide">
+                {hasGeminiKey ? 'AI Live' : 'AI Brain'}
               </span>
             </button>
 
@@ -376,6 +412,13 @@ export const DuoHeader: React.FC<DuoHeaderProps> = ({
           </div>
         </div>
       )}
+
+      {/* AI Brain Gemini API Key Config Modal */}
+      <AIBrainModal
+        isOpen={showAiBrainModal}
+        onClose={() => setShowAiBrainModal(false)}
+        onKeyUpdated={(active) => setHasGeminiKey(active)}
+      />
     </>
   );
 };

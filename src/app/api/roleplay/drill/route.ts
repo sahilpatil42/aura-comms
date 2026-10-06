@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DrillSubmissionSchema } from '@/lib/validations';
 import { CRISIS_SCENARIOS } from '@/lib/constants/scenarios';
+import { ALL_AGGREGATED_PLATFORM_SCENARIOS } from '@/data/platformScenarios';
 import { gradeDrillSubmission } from '@/lib/gemini';
+
+const ALL_SCENARIOS = [...CRISIS_SCENARIOS, ...ALL_AGGREGATED_PLATFORM_SCENARIOS];
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { scenarioId, pillar, prompt, userResponse } = parseResult.data;
-    const scenario = CRISIS_SCENARIOS.find((s) => s.id === scenarioId) || CRISIS_SCENARIOS[0];
+    const scenario = ALL_SCENARIOS.find((s) => s.id === scenarioId) || CRISIS_SCENARIOS[0];
 
     const result = await gradeDrillSubmission(scenario, pillar, prompt, userResponse);
 

@@ -28,8 +28,11 @@ import {
   ShieldAlert, 
   MessageSquare,
   Radio,
-  ArrowRight
+  ArrowRight,
+  Brain
 } from 'lucide-react';
+import { cleanSpokenDialogue } from '@/lib/gemini';
+import { AIBrainModal } from '@/components/duo/AIBrainModal';
 
 interface LocalTurn {
   id: string;
@@ -89,6 +92,22 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
   const [latestEvaluation, setLatestEvaluation] = useState<TurnEvaluation | null>(null);
   const [hasReassuredClient, setHasReassuredClient] = useState(false);
   const [activeTab, setActiveTab] = useState<'orb' | 'chat'>('orb');
+  const [showAiBrainModal, setShowAiBrainModal] = useState(false);
+  const [hasGeminiKey, setHasGeminiKey] = useState(false);
+
+  useEffect(() => {
+    const localKey = typeof window !== 'undefined' ? localStorage.getItem('AURA_GEMINI_KEY') || '' : '';
+    if (localKey && localKey.trim().length > 0) {
+      setHasGeminiKey(true);
+    } else {
+      fetch('/api/config/key')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.hasKey) setHasGeminiKey(true);
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   // References
   const micSessionRef = useRef<{ stop: () => Promise<any> } | null>(null);
@@ -258,8 +277,9 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
 
       const data = await res.json();
       const evaluation: TurnEvaluation | undefined = data?.evaluation;
-      const clientText = data?.turn?.text || evaluation?.clientReaction || 
-        `${clientFirstName}: "I need a real technical explanation of what happened to our campaigns."`;
+      const rawText = data?.turn?.text || evaluation?.clientReaction || 
+        "I need a real technical explanation of what happened to our campaigns.";
+      const clientText = cleanSpokenDialogue(rawText, clientFirstName);
       const sentiment = data?.turn?.sentiment || evaluation?.sentiment || 'skeptical';
 
       const clientTurn: LocalTurn = {
@@ -311,7 +331,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
       const fallbackReply: LocalTurn = {
         id: `turn-client-${Date.now()}`,
         speaker: 'client',
-        text: `${clientFirstName}: "Look, our metrics are hurting. I need you to lead with BLUF and give me our 48-hour containment plan so I know you have this handled."`,
+        text: cleanSpokenDialogue(`Look, our metrics are hurting. I need you to lead with BLUF and give me our 48-hour containment plan so I know you have this handled.`, clientFirstName),
         timestamp: Date.now(),
         sentiment: 'skeptical',
       };
@@ -398,6 +418,23 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
 
         {/* Audio Voice Selector & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* AI Brain Button */}
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              setShowAiBrainModal(true);
+            }}
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-400/30 text-xs font-bold text-indigo-200 hover:text-white cursor-pointer transition-all"
+            title="Configure AI Brain (Google Gemini LLM / Semantic Engine)"
+          >
+            <Brain className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[10px] sm:text-xs hidden sm:inline">
+              {hasGeminiKey ? 'Gemini LLM' : 'AI Brain'}
+            </span>
+            <span className={`w-1.5 h-1.5 rounded-full ${hasGeminiKey ? 'bg-emerald-400 animate-pulse' : 'bg-sky-400'}`} />
+          </button>
+
           {/* Voice Selector */}
           <button
             type="button"
@@ -576,12 +613,12 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                   ? `${clientFirstName} is talking back to you...`
                   : isSubmitting
                   ? `${clientFirstName} is analyzing your response...`
-                  : 'Tap the mic to talk back to Alex'}
+                  : `Tap the mic to talk back to ${clientFirstName}`}
               </span>
 
               {/* Latest Spoken Snippet in Orb View */}
               <p className="text-xs text-blue-200/80 font-medium italic line-clamp-2 max-w-sm mx-auto">
-                "{isRecording ? (textInput || 'Listening...') : lastClientTurn.text}"
+                "{isRecording ? (textInput || 'Listening...') : cleanSpokenDialogue(lastClientTurn.text, clientFirstName)}"
               </p>
             </div>
           </div>
@@ -591,10 +628,11 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
         {activeTab === 'chat' && (
           <div 
             ref={chatScrollRef}
-            className="flex-1 overflow-y-auto max-h-[36dvh] sm:max-h-[44dvh] p-2 sm:p-3 rounded-2xl bg-[#08122c]/80 backdrop-blur-xl border border-blue-400/20 space-y-3 shadow-inner animate-in fade-in"
+            className="flex-1 overflow-y-auto max-h-[42dvh] sm:max-h-[50dvh] p-3 rounded-2xl bg-[#08122c]/80 backdrop-blur-xl border border-blue-400/20 space-y-3 shadow-inner animate-in fade-in"
           >
             {turns.map((turn, idx) => {
               const isClient = turn.speaker === 'client';
+              const cleanText = isClient ? cleanSpokenDialogue(turn.text, clientFirstName) : turn.text;
               return (
                 <div 
                   key={turn.id || idx}
@@ -622,7 +660,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                         : 'bg-gradient-to-r from-blue-600 to-sky-600 text-white rounded-tr-sm shadow-blue-500/10'
                     }`}
                   >
-                    <p className="break-words">{turn.text}</p>
+                    <p className="break-words">{cleanText}</p>
 
                     {/* Audio Replay Button on Client Turns */}
                     {isClient && (
@@ -632,7 +670,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                           onClick={() => {
                             NeuralTTS.stop();
                             setIsClientSpeaking(true);
-                            NeuralTTS.speak(turn.text, {
+                            NeuralTTS.speak(cleanText, {
                               voice: selectedVoice,
                               onEnd: () => setIsClientSpeaking(false),
                             });
@@ -1070,6 +1108,13 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           </div>
         </div>
       )}
+
+      {/* 8. AI BRAIN CONFIGURATION MODAL */}
+      <AIBrainModal
+        isOpen={showAiBrainModal}
+        onClose={() => setShowAiBrainModal(false)}
+        onKeyUpdated={(active) => setHasGeminiKey(active)}
+      />
 
     </div>
   );
