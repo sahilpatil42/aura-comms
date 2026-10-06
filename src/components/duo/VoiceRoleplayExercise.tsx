@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { useGamificationStore, PathNode } from '@/stores/useGamificationStore';
+import { useGamificationStore } from '@/stores/useGamificationStore';
 import { UniversalMicEngine, NeuralTTS, SOOTHING_VOICE_LIST } from '@/lib/audio';
 import { soundEffects } from '@/lib/soundEffects';
 import { FeedbackData } from '@/components/duo/InstantFeedbackCelebration';
@@ -10,19 +10,36 @@ import { TurnEvaluation } from '@/types/scenario';
 import { 
   X, 
   Volume2, 
+  VolumeX, 
   Mic, 
   MicOff, 
   Send, 
   Sparkles, 
   Zap, 
   Keyboard, 
-  Radio, 
   Loader2, 
   Play, 
-  VolumeX, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle, 
+  RotateCcw, 
+  HelpCircle, 
+  BarChart3, 
+  Flame, 
+  ShieldAlert, 
+  MessageSquare,
+  Radio,
+  ArrowRight
 } from 'lucide-react';
+
+interface LocalTurn {
+  id: string;
+  speaker: 'client' | 'user';
+  text: string;
+  timestamp: number;
+  sentiment?: 'confrontational' | 'skeptical' | 'reassured' | 'neutral';
+  flaggedPhrases?: string[];
+  evaluation?: TurnEvaluation;
+}
 
 interface VoiceRoleplayExerciseProps {
   onCompleteExercise: (feedbackData: FeedbackData) => void;
@@ -33,18 +50,29 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
   onCompleteExercise,
   onExit,
 }) => {
-  const { 
-    activeScenario, 
-    currentTurn, 
-    maxTurns, 
-    dialogueHistory, 
-    addDialogueTurn,
-    nextTurn
-  } = useSessionStore();
+  const { activeScenario } = useSessionStore();
+  const { hearts } = useGamificationStore();
 
-  const { hearts, spendHeart } = useGamificationStore();
+  const clientName = activeScenario.stakeholder?.name || 'Alex Rivera';
+  const clientFirstName = clientName.split(' ')[0];
+  const clientRole = activeScenario.stakeholder?.title || 'Head of Growth';
+  const clientOrg = activeScenario.stakeholder?.organization || 'Lumina D2C';
+  const primaryKPI = activeScenario.brokenKPIs?.[0]?.metric || 'Cost Per Lead (CPL)';
+  const currentObjection = activeScenario.initialClientDialogue || 
+    "Our Meta Ads CPL spiked by 42% overnight! Why is our budget burning, and why shouldn't I pause all campaigns right this second?!";
 
-  // User input states
+  // Multi-Turn Dialogue State
+  const [turns, setTurns] = useState<LocalTurn[]>([
+    {
+      id: `turn-init-${Date.now()}`,
+      speaker: 'client',
+      text: currentObjection,
+      timestamp: Date.now(),
+      sentiment: activeScenario.stakeholder?.temperament === 'impatient-skeptic' ? 'confrontational' : 'skeptical',
+    }
+  ]);
+
+  // Input states
   const [textInput, setTextInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [micVolume, setMicVolume] = useState(0);
@@ -56,23 +84,26 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
   const [previewVoiceId, setPreviewVoiceId] = useState<string | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [micNotice, setMicNotice] = useState<string | null>(null);
+  const [showKpiDrawer, setShowKpiDrawer] = useState(false);
+  const [showHintModal, setShowHintModal] = useState(false);
+  const [latestEvaluation, setLatestEvaluation] = useState<TurnEvaluation | null>(null);
+  const [hasReassuredClient, setHasReassuredClient] = useState(false);
+  const [activeTab, setActiveTab] = useState<'orb' | 'chat'>('orb');
 
   // References
   const micSessionRef = useRef<{ stop: () => Promise<any> } | null>(null);
   const universalMicRef = useRef<UniversalMicEngine | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Active objection text from scenario
-  const currentObjection = activeScenario.initialClientDialogue || 
-    "Our Meta Ads CPL spiked by 42% overnight! Why is our budget burning, and why shouldn't I pause all campaigns right this second?!";
+  // Auto-scroll chat when turns update
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [turns, isSubmitting]);
 
-  // Calculate top progress percentage based on dialogue turns
-  const progressPercent = Math.min(100, Math.round(((currentTurn - 1) / Math.max(1, maxTurns)) * 100) + 20);
-
-  // Mobile-safe audio interaction state
-  const [hasUserPlayedAudio, setHasUserPlayedAudio] = useState(false);
-
-  // Play client's speech on mount with Soothing Neural Voice, handling mobile autoplay restrictions
+  // Initial client speech when entering scenario with NeuralTTS
   useEffect(() => {
     let isMounted = true;
     setIsClientSpeaking(true);
@@ -80,19 +111,13 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
     NeuralTTS.speak(currentObjection, {
       voice: selectedVoice,
       onStart: () => {
-        if (isMounted) {
-          setIsClientSpeaking(true);
-          setHasUserPlayedAudio(true);
-        }
+        if (isMounted) setIsClientSpeaking(true);
       },
       onEnd: () => {
         if (isMounted) setIsClientSpeaking(false);
       },
       onError: () => {
-        // Mobile browsers block unprompted autoplay - allow user to tap Listen button
-        if (isMounted) {
-          setIsClientSpeaking(false);
-        }
+        if (isMounted) setIsClientSpeaking(false);
       },
     }).catch(() => {
       if (isMounted) setIsClientSpeaking(false);
@@ -107,36 +132,11 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
     };
   }, [currentObjection]);
 
+  // Get current stakeholder mood from latest client turn
+  const lastClientTurn = [...turns].reverse().find(t => t.speaker === 'client') || turns[0];
+  const currentMood = lastClientTurn.sentiment || 'confrontational';
 
-  // Diagnostic Mic Test Modal state
-  const [showMicTestModal, setShowMicTestModal] = useState(false);
-  const [micTestResult, setMicTestResult] = useState<{
-    hasGetUserMedia: boolean;
-    hasHardwareMic: boolean;
-    hasWebSpeech: boolean;
-    activeDeviceName?: string;
-    error?: string;
-  } | null>(null);
-  const [isTestingMic, setIsTestingMic] = useState(false);
-
-  const runMicDiagnostic = async () => {
-    setIsTestingMic(true);
-    try {
-      const res = await UniversalMicEngine.testMicrophone();
-      setMicTestResult(res);
-    } catch (e: any) {
-      setMicTestResult({
-        hasGetUserMedia: false,
-        hasHardwareMic: false,
-        hasWebSpeech: false,
-        error: e?.message || 'Error testing microphone',
-      });
-    } finally {
-      setIsTestingMic(false);
-    }
-  };
-
-  // Handle Voice Recording with live streaming + auto-stop on silence
+  // Toggle Voice Recording
   const toggleRecording = async () => {
     if (isRecording) {
       // Manual stop
@@ -148,8 +148,6 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           if (res?.transcript && res.transcript.trim()) {
             setTextInput(res.transcript.trim());
             setMicNotice(null);
-          } else if (!textInput.trim()) {
-            setMicNotice('No words recognized. Tap "Use Recommended BLUF" below or switch to Keyboard mode.');
           }
         } catch (_) {}
         micSessionRef.current = null;
@@ -162,7 +160,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
       setIsClientSpeaking(false);
       setIsRecording(true);
       setMicVolume(15);
-      setMicNotice('🎙️ Listening... Speak clearly into your mic! Words appear live in the box.');
+      setMicNotice('🎙️ Listening... Speak your thoughts to Alex!');
 
       const engine = new UniversalMicEngine();
       universalMicRef.current = engine;
@@ -170,38 +168,29 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
       try {
         const session = await engine.start({
           initialText: textInput,
-          autoStopDelayMs: 3200, // 3.2s natural conversational pause
+          autoStopDelayMs: 3000,
           onVolumeChange: (vol) => {
             setMicVolume(vol);
           },
-          onVoiceDetected: (hasSound) => {
-            if (hasSound && !textInput.trim()) {
-              setMicNotice('🎤 Audio energy detected! Transcribing your speech...');
-            }
-          },
           onTranscriptUpdate: (streamedText) => {
-            // Live syllable-by-syllable word streaming directly into the text box!
             setTextInput(streamedText);
-            setMicNotice('✨ Hearing your voice! Transcribing live into box...');
+            setMicNotice('✨ Listening... Transcribing live');
           },
           onAutoStop: (finalText) => {
-            // Automatic silence detection: stops recording and inputs text on conversational pause
             setIsRecording(false);
             setMicVolume(0);
             micSessionRef.current = null;
             if (finalText && finalText.trim()) {
               setTextInput(finalText.trim());
               setMicNotice(null);
-            } else if (!textInput.trim()) {
-              setMicNotice('Finished listening. Tap "Use Recommended BLUF" below or type in Keyboard mode.');
+              // Auto-submit after voice finish for a fluid talk-back experience
+              handleSendTurn(finalText.trim());
+            } else {
+              setMicNotice('No speech detected. Tap mic again or switch to Keyboard.');
             }
-            soundEffects.playSuccess();
-            setTimeout(() => {
-              textareaRef.current?.focus();
-            }, 100);
           },
           onError: (err) => {
-            console.warn('Voice roleplay error:', err);
+            console.warn('Voice error:', err);
             setIsRecording(false);
             setMicVolume(0);
             setMicNotice(err);
@@ -217,21 +206,37 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
     }
   };
 
-  // Deliver user response & generate Duolingo-style evaluation
-  const handleCheckAnswer = async (responseOverride?: string) => {
-    const finalAnswer = (responseOverride || textInput).trim();
+  // Deliver user turn & receive talk-back from AI client
+  const handleSendTurn = async (messageOverride?: string) => {
+    const finalAnswer = (messageOverride || textInput).trim();
     if (!finalAnswer || isSubmitting) return;
 
     soundEffects.playClick();
     if (isRecording && micSessionRef.current) {
       await micSessionRef.current.stop().catch(() => {});
       setIsRecording(false);
+      setMicVolume(0);
     }
 
+    // Add user turn immediately to conversation stream
+    const userTurn: LocalTurn = {
+      id: `turn-user-${Date.now()}`,
+      speaker: 'user',
+      text: finalAnswer,
+      timestamp: Date.now(),
+    };
+
+    const updatedTurns = [...turns, userTurn];
+    setTurns(updatedTurns);
+    setTextInput('');
+    setMicNotice(null);
     setIsSubmitting(true);
+    NeuralTTS.stop();
+    setIsClientSpeaking(false);
 
     try {
       const userApiKey = typeof window !== 'undefined' ? localStorage.getItem('AURA_GEMINI_KEY') || undefined : undefined;
+      const userTurnCount = updatedTurns.filter(t => t.speaker === 'user').length;
 
       const res = await fetch('/api/roleplay/chat', {
         method: 'POST',
@@ -239,84 +244,134 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
         body: JSON.stringify({
           scenarioId: activeScenario.id,
           userMessage: finalAnswer,
-          history: dialogueHistory.map((d) => ({
+          history: updatedTurns.map((d) => ({
+            id: d.id,
             speaker: d.speaker,
             text: d.text,
+            timestamp: d.timestamp,
+            sentiment: d.sentiment,
           })),
-          currentTurn: currentTurn,
+          currentTurn: userTurnCount,
           apiKey: userApiKey,
         }),
       });
 
       const data = await res.json();
       const evaluation: TurnEvaluation | undefined = data?.evaluation;
+      const clientText = data?.turn?.text || evaluation?.clientReaction || 
+        `${clientFirstName}: "I need a real technical explanation of what happened to our campaigns."`;
+      const sentiment = data?.turn?.sentiment || evaluation?.sentiment || 'skeptical';
 
-      const goldBenchmark = evaluation?.goldStandardBenchmark || activeScenario.modelAnswerBLUF?.bluf || 
-        "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.";
-
-      const clientText = evaluation?.clientReaction || data?.turn?.text || "I need a clear, actionable explanation of what happened to our campaigns.";
-      const exerciseScores = evaluation?.scores || {
-        marketingLogic: 25,
-        terminology: 20,
-        grammar: 55,
-        executivePresence: 25,
+      const clientTurn: LocalTurn = {
+        id: data?.turn?.id || `turn-client-${Date.now()}`,
+        speaker: 'client',
+        text: clientText,
+        timestamp: Date.now(),
+        sentiment: sentiment,
+        flaggedPhrases: data?.turn?.flaggedPhrases || evaluation?.flaggedPhrases,
+        evaluation: evaluation,
       };
-      const isPass = Boolean(evaluation?.isPass ?? ((exerciseScores.marketingLogic + exerciseScores.executivePresence) / 2 >= 75));
-      const sentiment = evaluation?.sentiment || (isPass ? 'reassured' : 'confrontational');
 
-      // Persist session to Supabase database
+      setTurns((prev) => [...prev, clientTurn]);
+      if (evaluation) {
+        setLatestEvaluation(evaluation);
+        if (evaluation.isPass) {
+          setHasReassuredClient(true);
+          soundEffects.playSuccess();
+        } else if (sentiment === 'confrontational') {
+          soundEffects.playCorrection();
+        }
+      }
+
+      // Automatically speak the client's talk-back response out loud!
+      setIsClientSpeaking(true);
+      NeuralTTS.speak(clientText, {
+        voice: selectedVoice,
+        onStart: () => setIsClientSpeaking(true),
+        onEnd: () => setIsClientSpeaking(false),
+        onError: () => setIsClientSpeaking(false),
+      });
+
+      // Save turn to Supabase
       try {
         const { saveRoleplaySession } = await import('@/lib/supabase');
         saveRoleplaySession({
           scenarioId: activeScenario.id,
           userPhrasing: finalAnswer,
-          goldStandardBenchmark: goldBenchmark,
-          scores: exerciseScores,
+          goldStandardBenchmark: activeScenario.modelAnswerBLUF?.bluf,
+          scores: evaluation?.scores || { marketingLogic: 50, terminology: 50, grammar: 60, executivePresence: 50 },
           clientReaction: clientText,
           sentiment: sentiment,
         });
       } catch (_) {}
 
-      // Trigger Celebration / Instant Feedback screen with real dynamic scoring
-      onCompleteExercise({
-        userPhrasing: finalAnswer,
-        goldStandardBenchmark: goldBenchmark,
-        scores: exerciseScores,
-        overallScore: evaluation?.overallScore ?? Math.round((exerciseScores.marketingLogic * 0.35) + (exerciseScores.terminology * 0.25) + (exerciseScores.grammar * 0.15) + (exerciseScores.executivePresence * 0.25)),
-        isPass: isPass,
-        clientReaction: clientText,
-        sentiment: sentiment,
-        feedbackNotes: evaluation?.feedbackNotes,
-        strengths: evaluation?.strengths,
-        weaknesses: evaluation?.weaknesses,
-      });
     } catch (err) {
-      // Offline / fallback fail-safe
-      onCompleteExercise({
-        userPhrasing: finalAnswer,
-        goldStandardBenchmark: activeScenario.modelAnswerBLUF?.bluf || 
-          "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.",
-        scores: {
-          marketingLogic: 25,
-          terminology: 20,
-          grammar: 50,
-          executivePresence: 25,
-        },
-        overallScore: 28,
-        isPass: false,
-        clientReaction: "I need a real technical explanation of what happened to our ad spend.",
-        sentiment: 'confrontational',
-        feedbackNotes: 'Offline fallback evaluation. Could not reach roleplay intelligence service.',
+      console.error('Talk-back chat error:', err);
+      // Offline fallback reply
+      const fallbackReply: LocalTurn = {
+        id: `turn-client-${Date.now()}`,
+        speaker: 'client',
+        text: `${clientFirstName}: "Look, our metrics are hurting. I need you to lead with BLUF and give me our 48-hour containment plan so I know you have this handled."`,
+        timestamp: Date.now(),
+        sentiment: 'skeptical',
+      };
+      setTurns((prev) => [...prev, fallbackReply]);
+      setIsClientSpeaking(true);
+      NeuralTTS.speak(fallbackReply.text, {
+        voice: selectedVoice,
+        onEnd: () => setIsClientSpeaking(false),
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // User triggers "I don't know / Explain Concept"
+  const handleAskForHelp = () => {
+    handleSendTurn(`I don't know what happened, can you explain what ${primaryKPI} is and what caused this crisis?`);
+  };
+
+  // User concludes call and receives full grading & mastery XP
+  const handleConcludeCall = () => {
+    NeuralTTS.stop();
+    soundEffects.playClick();
+
+    const lastUserTurn = [...turns].reverse().find(t => t.speaker === 'user');
+    const goldBenchmark = activeScenario.modelAnswerBLUF?.bluf || 
+      "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.";
+
+    // Determine overall pass/fail status
+    const isPass = hasReassuredClient || (latestEvaluation?.isPass ?? false);
+    const scores = latestEvaluation?.scores || {
+      marketingLogic: isPass ? 88 : 25,
+      terminology: isPass ? 85 : 20,
+      grammar: isPass ? 92 : 55,
+      executivePresence: isPass ? 90 : 25,
+    };
+
+    onCompleteExercise({
+      userPhrasing: lastUserTurn?.text || "Conversation completed across multiple turns.",
+      goldStandardBenchmark: goldBenchmark,
+      scores: scores,
+      overallScore: latestEvaluation?.overallScore ?? (isPass ? 88 : 32),
+      isPass: isPass,
+      clientReaction: lastClientTurn.text,
+      sentiment: latestEvaluation?.sentiment || (isPass ? 'reassured' : 'confrontational'),
+      feedbackNotes: latestEvaluation?.feedbackNotes || (isPass 
+        ? "Excellent multi-turn performance! You took ownership and defended campaigns effectively."
+        : "The client remained skeptical or confrontational. Lead with BLUF and state immediate containment actions."),
+      strengths: latestEvaluation?.strengths,
+      weaknesses: latestEvaluation?.weaknesses,
+    });
+  };
+
+  const userTurnCount = turns.filter(t => t.speaker === 'user').length;
+
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto min-h-0 flex-1 px-1.5 sm:px-4 pb-safe pb-8 select-none">
-      {/* 1. TOP PROGRESS BAR & EXERCISE HEADER */}
-      <div className="w-full flex items-center justify-between gap-2 sm:gap-4 pt-1 sm:pt-2 pb-2 sm:pb-3 flex-shrink-0">
+    <div className="flex flex-col w-full max-w-2xl mx-auto min-h-0 flex-1 px-2 sm:px-4 pb-safe pb-8 select-none">
+      
+      {/* 1. TALK-BACK CALL HEADER */}
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-3 pt-1 sm:pt-2 pb-2 sm:pb-3 flex-shrink-0 border-b border-white/10">
         {/* Exit Button */}
         <button
           type="button"
@@ -325,496 +380,547 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             setShowExitConfirm(true);
           }}
           className="p-1.5 sm:p-2 text-slate-400 hover:text-white rounded-2xl hover:bg-white/5 transition-colors cursor-pointer flex-shrink-0"
-          title="Exit Exercise"
+          title="Exit Talk-Back Call"
         >
           <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3]" />
         </button>
 
-        {/* Floating Soothing Blue Animated Progress Bar */}
-        <div className="flex-1 h-3.5 sm:h-4 bg-[#0b1633]/80 rounded-full overflow-hidden p-0.5 border border-blue-400/20 min-w-[70px] shadow-inner">
-          <div
-            className="h-full bg-gradient-to-r from-[#1d4ed8] via-[#3b82f6] to-[#38bdf8] rounded-full transition-all duration-500 shadow-sm relative overflow-hidden"
-            style={{ width: `${progressPercent}%` }}
-          >
-            <div className="absolute inset-0 bg-white/25 w-1/2 rounded-full" />
-          </div>
+        {/* Live Call Status Badge */}
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-400/30">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-sky-300 truncate">
+            Talk-Back Agent Live
+          </span>
+          <span className="text-[10px] text-blue-300/70 font-bold hidden sm:inline">
+            · Turn {userTurnCount + 1}
+          </span>
         </div>
 
-        {/* Mic Hardware Diagnostic Tool */}
-        <button
-          type="button"
-          onClick={() => {
-            setShowMicTestModal(true);
-            runMicDiagnostic();
-          }}
-          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#0c1938]/70 hover:bg-[#12234e] border border-blue-400/20 text-xs font-black text-blue-200 hover:text-white cursor-pointer transition-all shadow-sm flex-shrink-0"
-          title="Test Microphone Hardware & Permissions"
-        >
-          <Mic className="w-3.5 h-3.5 text-sky-400" />
-          <span className="hidden sm:inline">Mic Check</span>
-        </button>
+        {/* Audio Voice Selector & Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Voice Selector */}
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              setShowVoicePicker(true);
+            }}
+            className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-xl bg-[#0c1938]/70 hover:bg-[#12234e] border border-blue-400/20 text-xs font-bold text-blue-200 hover:text-white cursor-pointer transition-all"
+            title="Change AI Voice"
+          >
+            <Radio className="w-3.5 h-3.5 text-sky-400" />
+            <span className="text-[10px] sm:text-xs hidden sm:inline">{SOOTHING_VOICE_LIST.find(v => v.id === selectedVoice)?.name || 'Jenny'}</span>
+          </button>
 
-        {/* Energy / Hearts */}
-        <div className="flex items-center gap-1 text-xs sm:text-sm font-black text-rose-400 flex-shrink-0">
-          <span className="text-base sm:text-xl">❤️</span>
-          <span>{hearts}</span>
+          {/* Hearts counter */}
+          <div className="flex items-center gap-1 text-xs sm:text-sm font-black text-rose-400 flex-shrink-0 bg-rose-500/10 px-2 py-0.5 rounded-xl border border-rose-500/20">
+            <span>❤️</span>
+            <span>{hearts}</span>
+          </div>
         </div>
       </div>
 
-      {/* 2. CENTRAL CLIENT INTERACTION AREA */}
-      <div className="flex flex-col gap-3 sm:gap-5 py-2 sm:py-3 flex-1 min-h-0">
-        {/* Client Avatar + Comic Speech Bubble */}
-        <div className="flex items-start gap-2.5 sm:gap-4">
-          {/* Character Illustration Card */}
-          <div className="flex flex-col items-center flex-shrink-0">
-            <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] border-2 sm:border-4 border-[#070e24] flex items-center justify-center text-xl sm:text-4xl shadow-xl relative">
-              <span>👨‍💼</span>
-              {isClientSpeaking && (
-                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 sm:h-4 sm:w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 bg-sky-400 border-2 border-[#070e24]"></span>
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-black text-white mt-1 uppercase tracking-wide truncate max-w-[65px] sm:max-w-none text-center">
-              {activeScenario.stakeholder?.name || 'CMO Alex'}
-            </span>
-            <span className="text-[8px] sm:text-[9px] font-bold text-blue-300/60">
-              Enterprise CMO
-            </span>
+      {/* 2. STAKEHOLDER PERSONA CARD */}
+      <div className="pt-2 sm:pt-3 pb-1 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-tr from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] border-2 border-white/20 flex items-center justify-center text-xl sm:text-2xl shadow-lg relative flex-shrink-0">
+            <span>👨‍💼</span>
+            {isClientSpeaking && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-400 border border-[#070e24]"></span>
+              </span>
+            )}
           </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-sm sm:text-base font-black text-white truncate">
+                {clientName}
+              </h2>
+              <span className="text-[10px] text-blue-200/60 font-semibold truncate hidden sm:inline">
+                ({clientRole})
+              </span>
+            </div>
+            <p className="text-[11px] text-blue-200/80 font-medium truncate">
+              {clientOrg}
+            </p>
+          </div>
+        </div>
 
-          {/* Speech Bubble with Tail */}
-          <div className="relative flex-1 bg-[#0a1532]/85 backdrop-blur-2xl border border-blue-400/25 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xl min-w-0 ring-1 ring-white/10">
-            {/* Speech bubble pointer tail */}
-            <div className="speech-bubble-tail-left hidden sm:block" />
+        {/* Dynamic Client Mood Pill */}
+        <div className="flex-shrink-0">
+          <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border flex items-center gap-1 shadow-xs ${
+            currentMood === 'reassured'
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+              : currentMood === 'skeptical'
+              ? 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+              : 'bg-rose-500/20 text-rose-300 border-rose-400/30'
+          }`}>
+            {currentMood === 'reassured' && '✓ Reassured'}
+            {currentMood === 'skeptical' && '⚠️ Skeptical'}
+            {currentMood === 'confrontational' && '🔥 Confrontational'}
+            {currentMood === 'neutral' && '💡 Explaining'}
+          </span>
+        </div>
+      </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 mb-2">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider text-rose-300 bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded-md truncate">
-                  Client Crisis Objection
-                </span>
+      {/* Mode Switcher Tabs (Voice Orb vs Chat Transcript) */}
+      <div className="flex items-center justify-center gap-2 py-1.5">
+        <button
+          type="button"
+          onClick={() => setActiveTab('orb')}
+          className={`px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'orb'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-400/30 shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5" />
+          <span>Live Voice Orb</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('chat')}
+          className={`px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'chat'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-400/30 shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Call Transcript ({turns.length})</span>
+        </button>
+      </div>
 
-                {/* AI Agent Voice Selector Pill */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundEffects.playClick();
-                    setShowVoicePicker(true);
-                  }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#09132c]/80 hover:bg-[#112046] border border-blue-400/30 text-[10px] sm:text-[11px] font-black text-blue-100 hover:text-white transition-all cursor-pointer shadow-xs"
-                  title="Choose which AI Agent voice speaks"
-                >
-                  <span className="text-xs">
-                    {SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.gender === 'female' ? '👩' : '👨'}
-                  </span>
-                  <span>Agent: <strong className="text-sky-300">{SOOTHING_VOICE_LIST.find((v) => v.id === selectedVoice)?.name || 'Jenny'}</strong></span>
-                  <span className="text-[9px] text-sky-400">▼</span>
-                </button>
-              </div>
+      {/* 3. CENTRAL TALK-BACK STAGE */}
+      <div className="flex-1 min-h-0 flex flex-col justify-between py-1 sm:py-2">
 
-              {/* Stop / Listen Audio Toggle Button */}
+        {/* TAB 1: THE GLOWING VOICE ORB STAGE (ChatGPT / Gemini Live style) */}
+        {activeTab === 'orb' && (
+          <div className="flex-1 flex flex-col items-center justify-center relative py-2 sm:py-4 animate-in fade-in">
+            {/* Ambient Sound Ripple Rings */}
+            <div className="relative flex items-center justify-center">
+              {/* Outer Glow Circles */}
+              <div 
+                className={`w-36 h-36 sm:w-48 sm:h-48 rounded-full absolute transition-all duration-300 pointer-events-none ${
+                  isClientSpeaking
+                    ? 'bg-sky-500/20 animate-ping'
+                    : isRecording
+                    ? 'bg-emerald-500/25 animate-pulse'
+                    : isSubmitting
+                    ? 'bg-indigo-500/20 animate-spin'
+                    : 'bg-blue-600/10'
+                }`}
+                style={{
+                  transform: isRecording ? `scale(${1 + Math.min(micVolume, 100) / 140})` : undefined,
+                }}
+              />
+              <div 
+                className={`w-28 h-28 sm:w-36 sm:h-36 rounded-full absolute transition-all duration-200 pointer-events-none ${
+                  isClientSpeaking
+                    ? 'bg-sky-400/30 animate-pulse'
+                    : isRecording
+                    ? 'bg-emerald-400/30'
+                    : 'bg-blue-500/15'
+                }`}
+                style={{
+                  transform: isRecording ? `scale(${1 + Math.min(micVolume, 100) / 180})` : undefined,
+                }}
+              />
+
+              {/* Central Glowing Orb Core */}
               <button
                 type="button"
-                onClick={() => {
-                  soundEffects.playClick();
-                  if (isClientSpeaking) {
-                    NeuralTTS.stop();
-                    setIsClientSpeaking(false);
-                  } else {
-                    NeuralTTS.stop();
-                    setIsClientSpeaking(true);
-                    setHasUserPlayedAudio(true);
-                    NeuralTTS.speak(currentObjection, {
-                      voice: selectedVoice,
-                      onEnd: () => setIsClientSpeaking(false),
-                      onError: () => setIsClientSpeaking(false),
-                    });
-                  }
-                }}
-                className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-black border transition-all cursor-pointer flex-shrink-0 ${
-                  isClientSpeaking
-                    ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm animate-pulse'
-                    : !hasUserPlayedAudio
-                    ? 'bg-sky-500/20 border-sky-400/40 text-sky-300 shadow-sm animate-pulse'
-                    : 'bg-[#0e1c3c]/70 hover:bg-[#142650] text-sky-300 border-blue-400/20'
+                onClick={toggleRecording}
+                className={`relative z-10 w-20 h-20 sm:w-28 sm:h-28 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer shadow-[0_15px_50px_rgba(37,99,235,0.45)] border-2 active:scale-95 ${
+                  isRecording
+                    ? 'bg-gradient-to-tr from-emerald-600 to-teal-400 border-emerald-300 text-white animate-pulse shadow-emerald-500/30'
+                    : isClientSpeaking
+                    ? 'bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 border-sky-300 text-white shadow-sky-500/40 animate-voice-pulse'
+                    : isSubmitting
+                    ? 'bg-gradient-to-tr from-indigo-600 to-purple-500 border-indigo-400 text-white animate-pulse'
+                    : 'bg-gradient-to-tr from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] border-white/30 text-white hover:brightness-110'
                 }`}
-                title={isClientSpeaking ? 'Stop Playing' : 'Listen with Selected AI Voice'}
+                title={isRecording ? 'Click to finish speaking' : 'Click to talk back to Alex'}
               >
-                {isClientSpeaking ? (
+                {isRecording ? (
                   <>
-                    <VolumeX className="w-3.5 h-3.5" />
-                    <span>Stop</span>
+                    <MicOff className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                    <span className="text-[9px] font-black uppercase tracking-wider mt-1">Listening</span>
+                  </>
+                ) : isClientSpeaking ? (
+                  <>
+                    <Volume2 className="w-8 h-8 sm:w-10 sm:h-10 animate-pulse" />
+                    <span className="text-[9px] font-black uppercase tracking-wider mt-1">Speaking</span>
+                  </>
+                ) : isSubmitting ? (
+                  <>
+                    <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin" />
+                    <span className="text-[9px] font-black uppercase tracking-wider mt-1">Thinking</span>
                   </>
                 ) : (
                   <>
-                    <Volume2 className="w-3.5 h-3.5" />
-                    <span>Listen</span>
+                    <Mic className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <span className="text-[9px] font-black uppercase tracking-wider mt-1">Tap Mic</span>
                   </>
                 )}
               </button>
             </div>
 
-            <p className="text-xs sm:text-base font-bold text-white leading-relaxed break-words">
-              "{currentObjection}"
-            </p>
-          </div>
-        </div>
-
-        {/* Director Pro-Framing Suggestion Chips */}
-        <div className="space-y-1.5 sm:space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-black">
-            <span className="text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 fill-amber-300 flex-shrink-0" />
-              <span>Director Pro-Framing</span>
-            </span>
-            <span className="text-blue-300/60 text-[10px]">
-              Tap chip to insert
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                setTextInput(
-                  "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs up 28%. We deployed 3 refreshed video variants with a 20% budget cap to stabilize costs."
-                );
-              }}
-              className="text-left p-2.5 sm:p-3 rounded-2xl bg-[#0c1838]/70 hover:bg-[#12234e] border border-blue-400/20 hover:border-sky-400/40 transition-all cursor-pointer text-xs group break-words min-w-0 backdrop-blur-sm"
-            >
-              <span className="text-[10px] font-black uppercase text-sky-300 block mb-0.5">
-                ★ Recommended: BLUF First
+            {/* Orb Status Subtitle */}
+            <div className="mt-4 sm:mt-5 text-center max-w-md px-3 space-y-1">
+              <span className="text-xs sm:text-sm font-black text-white tracking-wide block">
+                {isRecording
+                  ? 'Listening to you... (Speak or pause to send)'
+                  : isClientSpeaking
+                  ? `${clientFirstName} is talking back to you...`
+                  : isSubmitting
+                  ? `${clientFirstName} is analyzing your response...`
+                  : 'Tap the mic to talk back to Alex'}
               </span>
-              <span className="text-blue-200/80 font-semibold group-hover:text-white line-clamp-2 leading-relaxed">
-                "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs up 28%..."
-              </span>
-            </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                setTextInput(
-                  "Pausing all campaigns will reset Meta's algorithmic learning phase. Instead, we have isolated the fatigued ad sets and reallocated 60% of budget into lookalike scaling."
-                );
-              }}
-              className="text-left p-2.5 sm:p-3 rounded-2xl bg-[#0c1838]/70 hover:bg-[#12234e] border border-blue-400/20 hover:border-sky-400/40 transition-all cursor-pointer text-xs group break-words min-w-0 backdrop-blur-sm"
-            >
-              <span className="text-[10px] font-black uppercase text-cyan-300 block mb-0.5">
-                ★ Algorithm Defense
-              </span>
-              <span className="text-blue-200/80 font-semibold group-hover:text-white line-clamp-2 leading-relaxed">
-                "Pausing all campaigns will reset Meta's algorithmic learning phase. Instead, we reallocated..."
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. BOTTOM INTERACTIVE VOICE & RESPONSE PANEL */}
-      <div className="w-full flex flex-col gap-3 sm:gap-4 mt-auto pt-2 flex-shrink-0">
-        {/* Real-time Live Transcribed Textarea */}
-        <div className="relative">
-          <textarea
-            ref={textareaRef}
-            rows={inputMode === 'voice' ? 3 : 4}
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder={
-              isRecording
-                ? micVolume > 0
-                  ? `🎤 Listening (${micVolume}%)... Words stream live here`
-                  : '🎤 Speak now... Words will appear live here!'
-                : inputMode === 'voice'
-                ? 'Tap the glowing microphone below and speak your response...'
-                : 'Type your executive BLUF response here...'
-            }
-            className={`w-full bg-[#08122a]/90 backdrop-blur-xl text-white placeholder-blue-300/40 text-sm sm:text-base font-bold p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border-2 transition-all focus:outline-none resize-none leading-relaxed min-h-[105px] sm:min-h-[125px] ring-1 ring-white/10 ${
-              isRecording
-                ? 'border-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.35)]'
-                : 'border-blue-400/25 focus:border-sky-400'
-            }`}
-          />
-
-          {/* Word count & auto-stop status indicator */}
-          <div className="flex items-center justify-between px-3 pt-1 text-[11px] font-bold text-blue-200/60">
-            <div className="flex items-center gap-1.5 min-w-0 truncate">
-              {isRecording ? (
-                <span className="text-sky-300 flex items-center gap-1 min-w-0 truncate">
-                  <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping flex-shrink-0" />
-                  <span className="truncate">Auto-transcribing · Stops on pause</span>
-                </span>
-              ) : textInput.trim() ? (
-                <span className="text-blue-200/90 truncate">
-                  {textInput.split(/\s+/).filter(Boolean).length} words
-                </span>
-              ) : (
-                <span>Voice & Text</span>
-              )}
+              {/* Latest Spoken Snippet in Orb View */}
+              <p className="text-xs text-blue-200/80 font-medium italic line-clamp-2 max-w-sm mx-auto">
+                "{isRecording ? (textInput || 'Listening...') : lastClientTurn.text}"
+              </p>
             </div>
-
-            {/* Mode Switcher */}
-            <button
-              type="button"
-              onClick={() => setInputMode(inputMode === 'voice' ? 'text' : 'voice')}
-              className="text-sky-300 hover:text-white flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2 transition-colors"
-            >
-              {inputMode === 'voice' ? (
-                <>
-                  <Keyboard className="w-3.5 h-3.5" />
-                  <span>Keyboard</span>
-                </>
-              ) : (
-                <>
-                  <Mic className="w-3.5 h-3.5" />
-                  <span>Voice</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Real-time volume visualizer while recording */}
-        {isRecording && (
-          <div className="flex items-center justify-between px-3 sm:px-4 py-2 rounded-2xl bg-[#0c1938]/80 backdrop-blur-md border border-sky-400/35 text-xs font-bold text-blue-200 animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping" />
-              <span className="text-sky-300 font-black text-[11px] sm:text-xs">MIC:</span>
-              <div className="w-24 sm:w-40 h-2 bg-[#060c1e] rounded-full overflow-hidden border border-white/10">
-                <div
-                  className="h-full bg-gradient-to-r from-[#1d4ed8] via-[#3b82f6] to-[#38bdf8] transition-all duration-75"
-                  style={{ width: `${Math.max(10, micVolume)}%` }}
-                />
-              </div>
-              <span className="text-[10px] text-sky-300 font-mono">{micVolume}%</span>
-            </div>
-            <span className="text-[10px] sm:text-[11px] text-blue-300/70">
-              Speak clearly
-            </span>
           </div>
         )}
 
-        {/* Informative Mic Notice Banner */}
-        {micNotice && (
-          <div className="px-3 sm:px-4 py-2.5 rounded-2xl bg-[#0c1a3a]/85 backdrop-blur-md border border-sky-400/35 text-sky-200 text-xs font-bold flex flex-wrap items-center justify-between gap-2 animate-in fade-in">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <span className="flex-shrink-0">🎙️</span>
-              <span className="text-[11px] sm:text-xs break-words">{micNotice}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {!textInput.trim() && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundEffects.playClick();
-                    const gold = activeScenario.modelAnswerBLUF?.bluf || 
-                      "Alex, our CPL rose by 42% because Meta audience saturation raised CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target.";
-                    setTextInput(gold);
-                    setMicNotice(null);
-                  }}
-                  className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-black hover:brightness-110 transition-all cursor-pointer shadow-sm"
+        {/* TAB 2: LIVE CALL TRANSCRIPT (Chronological Back-and-Forth Stream) */}
+        {activeTab === 'chat' && (
+          <div 
+            ref={chatScrollRef}
+            className="flex-1 overflow-y-auto max-h-[36dvh] sm:max-h-[44dvh] p-2 sm:p-3 rounded-2xl bg-[#08122c]/80 backdrop-blur-xl border border-blue-400/20 space-y-3 shadow-inner animate-in fade-in"
+          >
+            {turns.map((turn, idx) => {
+              const isClient = turn.speaker === 'client';
+              return (
+                <div 
+                  key={turn.id || idx}
+                  className={`flex flex-col gap-1 ${isClient ? 'items-start' : 'items-end'}`}
                 >
-                  ⚡ Insert BLUF
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setMicNotice(null)}
-                className="text-blue-300/60 hover:text-white underline text-xs cursor-pointer p-1"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-300/70 px-1">
+                    <span>{isClient ? `👨‍💼 ${clientFirstName}` : '👤 You'}</span>
+                    {isClient && turn.sentiment && (
+                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded border ${
+                        turn.sentiment === 'reassured'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                          : turn.sentiment === 'confrontational'
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-400/30'
+                          : 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                      }`}>
+                        {turn.sentiment}
+                      </span>
+                    )}
+                  </div>
 
-        {/* Central Pulsing Microphone Button (Voice Mode) */}
-        {inputMode === 'voice' && (
-          <div className="flex flex-col items-center justify-center py-1 sm:py-2 relative">
-            {/* Animated Waveform Ripple Rings while Recording */}
-            {isRecording && (
-              <div className="absolute flex items-center justify-center pointer-events-none">
-                <span className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sky-400/25 animate-ping" />
-                <span className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-blue-500/15 animate-pulse absolute" />
+                  <div 
+                    className={`p-3 rounded-2xl max-w-[88%] text-xs sm:text-sm font-semibold leading-relaxed shadow-md ${
+                      isClient
+                        ? 'bg-[#0f1f44]/90 border border-blue-400/25 text-slate-100 rounded-tl-sm'
+                        : 'bg-gradient-to-r from-blue-600 to-sky-600 text-white rounded-tr-sm shadow-blue-500/10'
+                    }`}
+                  >
+                    <p className="break-words">{turn.text}</p>
+
+                    {/* Audio Replay Button on Client Turns */}
+                    {isClient && (
+                      <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            NeuralTTS.stop();
+                            setIsClientSpeaking(true);
+                            NeuralTTS.speak(turn.text, {
+                              voice: selectedVoice,
+                              onEnd: () => setIsClientSpeaking(false),
+                            });
+                          }}
+                          className="text-[10px] font-bold text-sky-300 hover:text-white flex items-center gap-1 cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                          <span>Re-play voice</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {isSubmitting && (
+              <div className="flex items-center gap-2 p-2 text-xs font-bold text-sky-300 animate-pulse">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>{clientFirstName} is formulating a response...</span>
               </div>
             )}
-
-            <button
-              type="button"
-              onClick={toggleRecording}
-              className={`relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-2xl active:scale-95 ${
-                isRecording
-                  ? 'bg-rose-500 border-b-[5px] sm:border-b-[6px] border-rose-700 text-white animate-voice-pulse shadow-[0_10px_30px_rgba(244,63,94,0.4)]'
-                  : 'bg-gradient-to-tr from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] border-b-[5px] sm:border-b-[6px] border-[#1e3a8a] text-white hover:brightness-110 active:translate-y-1 active:border-b-2 shadow-[0_10px_30px_rgba(37,99,235,0.45)]'
-              }`}
-              title={isRecording ? 'Click to stop manually' : 'Click to Speak (Microphone)'}
-            >
-              {isRecording ? (
-                <MicOff className="w-7 h-7 sm:w-8 sm:h-8 animate-pulse" />
-              ) : (
-                <Mic className="w-7 h-7 sm:w-8 sm:h-8" />
-              )}
-            </button>
-
-            <span className="text-[10px] sm:text-xs font-black text-blue-200/80 mt-2 tracking-wide">
-              {isRecording ? 'TAP TO STOP (OR PAUSE 3s)' : 'TAP TO SPEAK'}
-            </span>
           </div>
         )}
 
-        {/* Chunky 3D Action Button: CHECK / SUBMIT */}
-        <button
-          type="button"
-          onClick={() => handleCheckAnswer()}
-          disabled={!textInput.trim() || isSubmitting}
-          className={`w-full py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-black tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
-            textInput.trim() && !isSubmitting
-              ? 'btn-3d-blue shadow-xl active:scale-[0.99]'
-              : 'bg-[#0a1532]/70 border-b-4 border-blue-950 text-blue-300/40 cursor-not-allowed'
-          }`}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-              <span>EVALUATING YOUR RESPONSE...</span>
-            </>
-          ) : (
-            <>
-              <span>CHECK RESPONSE</span>
-              <Send className="w-4 h-4" />
-            </>
-          )}
-        </button>
-      </div>
+        {/* 4. QUICK CONVERSATION ASSISTS (HINTS, EXPLAIN CONCEPT, MODEL BLUF) */}
+        <div className="py-2 space-y-2">
+          {/* Assist Action Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+            {/* "I don't know / Explain Concept" button */}
+            <button
+              type="button"
+              onClick={handleAskForHelp}
+              disabled={isSubmitting}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-300 text-[11px] font-black flex items-center gap-1 whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
+              title="Alex will break down the metric definitions and explain the problem"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>I don't know (Explain)</span>
+            </button>
 
-      {/* Exit Confirmation Modal */}
-      {showExitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#040817]/75 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-6 text-center space-y-4 shadow-[0_20px_60px_rgba(3,7,24,0.7)] ring-1 ring-white/10">
-            <span className="text-4xl">🦉</span>
-            <h3 className="text-xl font-black text-white">Wait, don't leave!</h3>
-            <p className="text-xs font-semibold text-blue-200/80">
-              You'll lose your progress on this scenario if you exit now.
-            </p>
-            <div className="space-y-2 pt-2">
+            {/* "Director Coaching Hint" */}
+            <button
+              type="button"
+              onClick={() => setShowHintModal(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-blue-900/30 hover:bg-blue-900/50 border border-blue-400/25 text-blue-200 text-[11px] font-black flex items-center gap-1 whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              <span>Director Hint</span>
+            </button>
+
+            {/* "Use Recommended BLUF" */}
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                const model = activeScenario.modelAnswerBLUF?.bluf || 
+                  "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.";
+                setTextInput(model);
+                setInputMode('text');
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 text-[11px] font-black flex items-center gap-1 whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
+            >
+              <Zap className="w-3.5 h-3.5 fill-emerald-300" />
+              <span>Insert BLUF</span>
+            </button>
+
+            {/* "Inspect Broken KPIs" */}
+            <button
+              type="button"
+              onClick={() => setShowKpiDrawer(!showKpiDrawer)}
+              className="px-2.5 py-1.5 rounded-xl bg-[#0c1836]/70 hover:bg-[#12234e] border border-blue-400/20 text-slate-200 text-[11px] font-bold flex items-center gap-1 whitespace-nowrap cursor-pointer transition-all flex-shrink-0"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
+              <span>View KPIs</span>
+            </button>
+          </div>
+
+          {/* Broken KPIs Mini Drawer */}
+          {showKpiDrawer && (
+            <div className="p-3 rounded-2xl bg-[#0c1a3a]/90 border border-blue-400/30 space-y-1.5 animate-in fade-in">
+              <div className="flex items-center justify-between text-xs font-black text-blue-200">
+                <span>Account Metric Anomaly</span>
+                <button 
+                  type="button"
+                  onClick={() => setShowKpiDrawer(false)}
+                  className="text-slate-400 hover:text-white text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {activeScenario.brokenKPIs?.map((kpi, idx) => (
+                  <div key={idx} className="p-2 rounded-xl bg-[#08122c] border border-white/10">
+                    <span className="text-[10px] text-blue-300/80 block truncate font-bold">{kpi.metric}</span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5">
+                      <span className="text-sm font-black text-rose-400">{kpi.currentValue}</span>
+                      <span className="text-[10px] text-slate-400 line-through">{kpi.previousValue}</span>
+                      <span className="text-[10px] font-black text-rose-300">({kpi.deltaPercent})</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Live Mic Notice / Transcribing Status */}
+          {micNotice && (
+            <div className="px-3 py-1.5 rounded-xl bg-blue-950/70 border border-sky-400/30 text-sky-200 text-xs font-bold flex items-center justify-between animate-in fade-in">
+              <span className="truncate">{micNotice}</span>
+              <button 
+                type="button" 
+                onClick={() => setMicNotice(null)} 
+                className="text-slate-400 hover:text-white text-xs ml-2 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* User Input Controls (Voice vs Text Mode) */}
+          <div className="space-y-2">
+            {inputMode === 'text' ? (
+              /* Text Input Area */
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendTurn();
+                    }
+                  }}
+                  rows={2}
+                  placeholder={`Type your reply to ${clientFirstName} (or switch to Voice)...`}
+                  className="w-full p-3 pr-12 rounded-2xl bg-[#0c1836]/90 border border-blue-400/30 text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 resize-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleSendTurn()}
+                  disabled={!textInput.trim() || isSubmitting}
+                  className="absolute right-2.5 bottom-2.5 p-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-[#070e24] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all shadow-md"
+                  title="Send to Alex"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            ) : null}
+
+            {/* Bottom Interaction Buttons Bar */}
+            <div className="flex items-center gap-2">
+              {/* Voice vs Text toggle */}
               <button
                 type="button"
-                onClick={() => setShowExitConfirm(false)}
-                className="btn-3d-blue w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
+                onClick={() => setInputMode(inputMode === 'voice' ? 'text' : 'voice')}
+                className="p-3 rounded-2xl bg-[#0c1836]/70 hover:bg-[#12234e] border border-blue-400/20 text-blue-200 hover:text-white cursor-pointer transition-all flex-shrink-0"
+                title={inputMode === 'voice' ? 'Switch to Typing' : 'Switch to Voice Mode'}
               >
-                KEEP PRACTICING
+                {inputMode === 'voice' ? <Keyboard className="w-5 h-5" /> : <Mic className="w-5 h-5 text-sky-400" />}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowExitConfirm(false);
-                  onExit();
-                }}
-                className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
-              >
-                END SESSION
-              </button>
+
+              {/* Big Talk-Back / Send Action Button */}
+              {inputMode === 'voice' ? (
+                <button
+                  type="button"
+                  onClick={toggleRecording}
+                  disabled={isSubmitting}
+                  className={`flex-1 py-3.5 rounded-2xl text-xs sm:text-sm font-black tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-[0.99] ${
+                    isRecording
+                      ? 'btn-3d-red animate-pulse'
+                      : 'btn-3d-blue'
+                  }`}
+                >
+                  {isRecording ? (
+                    <>
+                      <MicOff className="w-4 h-4" />
+                      <span>TAP TO SEND TO {clientFirstName.toUpperCase()}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4" />
+                      <span>TALK BACK TO {clientFirstName.toUpperCase()}</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleSendTurn()}
+                  disabled={!textInput.trim() || isSubmitting}
+                  className="btn-3d-blue flex-1 py-3.5 rounded-2xl text-xs sm:text-sm font-black tracking-wider flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{clientFirstName.toUpperCase()} IS REPLYING...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>SEND TO {clientFirstName.toUpperCase()}</span>
+                      <Send className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Conclude Call / Grade Session Button */}
+              {userTurnCount >= 1 && (
+                <button
+                  type="button"
+                  onClick={handleConcludeCall}
+                  className={`px-4 py-3.5 rounded-2xl text-xs font-black tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg flex-shrink-0 ${
+                    hasReassuredClient
+                      ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 border-b-4 border-emerald-800 text-white shadow-emerald-500/30 animate-pulse'
+                      : 'btn-3d-neutral text-slate-200 border border-white/20'
+                  }`}
+                  title="Conclude call and evaluate whole session"
+                >
+                  <span>{hasReassuredClient ? 'FINISH (+15 XP) 🎉' : 'GRADE CALL'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Microphone Hardware & Browser Diagnostic Modal */}
-      {showMicTestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#040817]/75 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-4 sm:p-6 space-y-4 shadow-[0_20px_60px_rgba(3,7,24,0.7)] max-h-[88dvh] overflow-y-auto ring-1 ring-white/10">
-
+      {/* 5. DIRECTOR HINT OVERLAY MODAL */}
+      {showHintModal && (
+        <div 
+          onClick={() => setShowHintModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md select-none animate-in fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-[#09132c]/95 backdrop-blur-2xl border border-sky-400/30 rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl ring-1 ring-white/10"
+          >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🎙️</span>
+                <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="text-base font-black text-white">Microphone Diagnostic</h3>
-                  <p className="text-[11px] text-blue-200/70 font-semibold">Verify mic hardware and browser permissions</p>
+                  <h3 className="text-base font-black text-white">Director Coaching Hint</h3>
+                  <p className="text-[11px] text-blue-200/70 font-semibold">How to satisfy {clientName}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowMicTestModal(false)}
-                className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+              <button 
+                type="button" 
+                onClick={() => setShowHintModal(false)}
+                className="text-slate-400 hover:text-white cursor-pointer p-1"
               >
                 ✕
               </button>
             </div>
 
-            {/* Test Status Cards */}
-            <div className="space-y-2.5 text-xs font-bold">
-              {isTestingMic ? (
-                <div className="p-6 text-center space-y-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-sky-400 mx-auto" />
-                  <p className="text-blue-200/80">Checking audio device and browser speech permissions...</p>
-                </div>
-              ) : micTestResult ? (
-                <>
-                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 flex items-center justify-between">
-                    <span className="text-blue-200/80">Microphone Permission:</span>
-                    <span className={`flex items-center gap-1 ${micTestResult.hasHardwareMic ? 'text-sky-400' : 'text-rose-400'}`}>
-                      {micTestResult.hasHardwareMic ? '✓ Allowed & Active' : '✕ Blocked or Missing'}
-                    </span>
-                  </div>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 rounded-2xl bg-[#0c1836] border border-blue-400/20 space-y-1">
+                <span className="text-[10px] font-black uppercase text-amber-300">Target Technical Root Cause</span>
+                <p className="text-slate-200 font-medium leading-relaxed">
+                  {activeScenario.targetRootCauses?.[0] || 'Audience fatigue raised CPMs and degraded efficiency.'}
+                </p>
+              </div>
 
-                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 flex items-center justify-between">
-                    <span className="text-blue-200/80">Active Audio Device:</span>
-                    <span className="text-slate-200 font-mono text-[11px] truncate max-w-[180px]">
-                      {micTestResult.activeDeviceName || 'Default System Mic'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 flex items-center justify-between">
-                    <span className="text-blue-200/80">Web Speech API (Chrome/Edge):</span>
-                    <span className={`flex items-center gap-1 ${micTestResult.hasWebSpeech ? 'text-sky-400' : 'text-amber-400'}`}>
-                      {micTestResult.hasWebSpeech ? '✓ Supported' : '⚠️ Restricted (Use Keyboard)'}
-                    </span>
-                  </div>
-
-                  {micTestResult.error && (
-                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-[11px] text-rose-300">
-                      <strong>Issue Detected: </strong>{micTestResult.error}
-                    </div>
-                  )}
-
-                  <div className="p-3 bg-[#0c1836]/70 backdrop-blur-sm rounded-2xl border border-blue-400/15 text-[11px] text-blue-200/80 space-y-1">
-                    <span className="text-amber-300 font-black block">💡 Troubleshooting Tips:</span>
-                    <p>• If using <strong>Brave</strong>, click Shields and allow Google speech recognition services.</p>
-                    <p>• In <strong>Windows Settings</strong>, ensure "Microphone access for apps" is enabled.</p>
-                    <p>• You can always use <strong>"⚡ Insert BLUF Answer"</strong> or <strong>Keyboard Mode</strong> to practice uninterrupted.</p>
-                  </div>
-                </>
-              ) : (
-                <div className="p-4 text-center">
-                  <p className="text-blue-300/60">Click below to test your microphone device.</p>
-                </div>
-              )}
+              <div className="p-3 rounded-2xl bg-[#0c1836] border border-blue-400/20 space-y-1">
+                <span className="text-[10px] font-black uppercase text-emerald-300">Executive BLUF Structure</span>
+                <ul className="text-slate-300 space-y-1 list-disc list-inside">
+                  <li><strong>Sentence 1:</strong> State bottom line & acknowledge the {primaryKPI} spike.</li>
+                  <li><strong>Sentence 2:</strong> Technical root cause (avoid blaming the algorithm).</li>
+                  <li><strong>Sentence 3:</strong> Actionable 48h containment plan (fresh creative hooks + budget cap).</li>
+                </ul>
+              </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={runMicDiagnostic}
-                disabled={isTestingMic}
-                className="btn-3d-blue flex-1 py-3 rounded-2xl text-xs font-black text-white cursor-pointer"
-              >
-                {isTestingMic ? 'TESTING...' : 'RE-TEST MICROPHONE'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowMicTestModal(false)}
-                className="btn-3d-neutral px-5 py-3 rounded-2xl text-xs font-black cursor-pointer"
-              >
-                CLOSE
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                setShowHintModal(false);
+              }}
+              className="btn-3d-blue w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
+            >
+              GOT IT, LET'S TALK
+            </button>
           </div>
         </div>
       )}
 
-      {/* 4. AI AGENT VOICE SELECTOR MODAL */}
+      {/* 6. AI VOICE SELECTOR MODAL */}
       {showVoicePicker && (
         <div 
           onClick={() => {
@@ -822,18 +928,18 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             setPreviewVoiceId(null);
             setShowVoicePicker(false);
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#040817]/75 backdrop-blur-md animate-in fade-in select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#040817]/80 backdrop-blur-md animate-in fade-in select-none"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-5 sm:p-6 space-y-4 shadow-[0_20px_60px_rgba(3,7,24,0.7)] max-h-[88dvh] overflow-y-auto ring-1 ring-white/10"
+            className="w-full max-w-md bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[88dvh] overflow-y-auto ring-1 ring-white/10"
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎙️</span>
                 <div>
-                  <h3 className="text-base font-black text-white">Select AI Agent Voice</h3>
-                  <p className="text-[11px] text-blue-200/70 font-semibold">Only your chosen agent will read the problem statement</p>
+                  <h3 className="text-base font-black text-white">AI Agent Neural Voice</h3>
+                  <p className="text-[11px] text-blue-200/70 font-semibold">Choose which voice {clientFirstName} speaks with</p>
                 </div>
               </div>
               <button
@@ -841,7 +947,6 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                 onClick={() => {
                   soundEffects.playClick();
                   NeuralTTS.stop();
-                  setPreviewVoiceId(null);
                   setShowVoicePicker(false);
                 }}
                 className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
@@ -850,7 +955,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
               </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {SOOTHING_VOICE_LIST.map((v) => {
                 const isSelected = selectedVoice === v.id;
                 const isPreviewing = previewVoiceId === v.id;
@@ -861,22 +966,20 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                     onClick={() => {
                       soundEffects.playClick();
                       NeuralTTS.stop();
-                      setPreviewVoiceId(null);
                       NeuralTTS.setPreferredVoice(v.id);
                       setSelectedVoice(v.id);
                       setShowVoicePicker(false);
-                      // Read problem statement with newly selected agent
+                      // Auto-read client's current line
                       setIsClientSpeaking(true);
-                      NeuralTTS.speak(currentObjection, {
+                      NeuralTTS.speak(lastClientTurn.text, {
                         voice: v.id,
                         onEnd: () => setIsClientSpeaking(false),
-                        onError: () => setIsClientSpeaking(false),
                       });
                     }}
                     className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
                       isSelected
                         ? 'bg-blue-600/20 border-sky-400/80 shadow-md ring-1 ring-sky-400/30'
-                        : 'bg-[#0c1836]/70 hover:bg-[#12234e] border-blue-400/15 hover:border-blue-400/30 backdrop-blur-sm'
+                        : 'bg-[#0c1836]/70 hover:bg-[#12234e] border-blue-400/15 backdrop-blur-sm'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -890,17 +993,16 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                           <span className="text-sm font-black text-white">{v.name}</span>
                           {isSelected && (
                             <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-sky-400 text-[#070e24]">
-                              Active Agent
+                              Active
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-blue-200/70 font-semibold truncate max-w-[210px]">
+                        <p className="text-[11px] text-blue-200/70 font-semibold truncate">
                           {v.tone}
                         </p>
                       </div>
                     </div>
 
-                    {/* Quick Preview Voice Button */}
                     <button
                       type="button"
                       onClick={async (e) => {
@@ -916,12 +1018,7 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
                           setPreviewVoiceId(null);
                         });
                       }}
-                      className={`p-2 rounded-xl border transition-all cursor-pointer flex-shrink-0 ${
-                        isPreviewing
-                          ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse'
-                          : 'bg-[#09132c] hover:bg-[#112046] border-blue-400/20 text-sky-400'
-                      }`}
-                      title={isPreviewing ? 'Stop Preview' : `Listen to ${v.name} sample`}
+                      className="p-2 rounded-xl bg-[#09132c] hover:bg-[#112046] border border-blue-400/20 text-sky-400 cursor-pointer"
                     >
                       {isPreviewing ? <VolumeX className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
                     </button>
@@ -930,23 +1027,50 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
               })}
             </div>
 
-            <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowVoicePicker(false)}
+              className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
+            >
+              DONE
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 7. EXIT CONFIRMATION MODAL */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#040817]/75 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-[#09132c]/95 backdrop-blur-2xl border border-blue-400/25 rounded-3xl p-6 text-center space-y-4 shadow-2xl ring-1 ring-white/10">
+            <span className="text-4xl">🦉</span>
+            <h3 className="text-xl font-black text-white">End Call with {clientFirstName}?</h3>
+            <p className="text-xs font-semibold text-blue-200/80">
+              You will exit the roleplay call. Progress on this session will not be saved.
+            </p>
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(false)}
+                className="btn-3d-blue w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
+              >
+                KEEP TALKING
+              </button>
               <button
                 type="button"
                 onClick={() => {
-                  soundEffects.playClick();
+                  setShowExitConfirm(false);
                   NeuralTTS.stop();
-                  setPreviewVoiceId(null);
-                  setShowVoicePicker(false);
+                  onExit();
                 }}
                 className="btn-3d-neutral w-full py-3 rounded-2xl text-xs font-black cursor-pointer"
               >
-                DONE
+                EXIT CALL
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

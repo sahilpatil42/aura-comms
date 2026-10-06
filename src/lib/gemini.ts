@@ -109,7 +109,8 @@ The user just responded:
 
 INSTRUCTIONS:
 ${toneInstruction}
-5. Return JSON format:
+5. If the user asks for help, says they don't know, or asks for definitions/explanations of metrics (e.g. "what is CPL?", "explain the situation", "I don't know"): Break down the metric definition simply, explain what went wrong with the campaigns, and coach them on how they should answer with BLUF.
+6. Return JSON format:
 {
   "text": "your spoken client response",
   "sentiment": "confrontational" | "skeptical" | "reassured" | "neutral"
@@ -420,7 +421,13 @@ THE USER (MEDIA BUYER) RESPONDED:
 "${userText}"
 
 STRICT EVALUATION RUBRIC:
-1. OFF-TOPIC, TRIVIAL, MIC TESTING, OR NONSENSE (e.g. "so that would mean oh my god this working nice", "testing mic", "hello", "i don't know", random chit-chat):
+0. ASKING FOR HELP / "I DON'T KNOW" / ASKING FOR DEFINITION (e.g. "I don't know what happened", "can you explain what CPL means?", "what is the situation?", "tell me the answer"):
+   - sentiment: "skeptical" or "neutral".
+   - isPass: false.
+   - clientReaction: The client/agent breaks down the metric definition, explains what went wrong in this specific account, and explicitly tells the user what kind of BLUF answer they need to hear to be reassured.
+   - feedbackNotes: Explain the metric and prompt the user to practice delivering the BLUF answer.
+
+1. OFF-TOPIC, TRIVIAL, MIC TESTING, OR NONSENSE (e.g. "so that would mean oh my god this working nice", "testing mic", "hello", random chit-chat):
    - You MUST assign FAILING scores: marketingLogic: 5-25, terminology: 5-20, grammar: 40-60, executivePresence: 10-25.
    - overallScore: 10-25.
    - isPass: false.
@@ -541,9 +548,40 @@ function generateDeterministicTurnEvaluation(
   const hasBluf = /\b(bottom line|bluf|up front|immediate|contained|here is what|to stabilize)\b/i.test(lower);
   const hasActionPlan = /\b(deployed|paused|refreshed|capped|reallocated|stabiliz|variant|variants|hook|hooks|audit|tested|schedule|plan|stop-loss)\b/i.test(lower);
 
+  // 0. Check if user is asking for help, says "I don't know", or asks for definition/explanation of what happened
+  const isHelpOrDontKnow = /\b(i don't know|idk|don't know|dont know|not sure|help|explain|what does .* mean|what happened|what is the answer|tell me what to do|can you explain|what should i say|definition|what is cpl|what is cpm|what is ctr|what is roas)\b/i.test(lower);
+
+  if (isHelpOrDontKnow) {
+    const rootHint = scenario.targetRootCauses[0] || 'audience saturation drove ad costs up';
+    const primaryMetric = scenario.brokenKPIs[0]?.metric || 'Cost Per Lead';
+    const prevVal = scenario.brokenKPIs[0]?.previousValue || 'normal baseline';
+    const currVal = scenario.brokenKPIs[0]?.currentValue || 'elevated';
+    
+    return {
+      scores: {
+        marketingLogic: 50,
+        terminology: 50,
+        grammar: 75,
+        executivePresence: 50,
+      },
+      overallScore: 54,
+      isPass: false,
+      sentiment: 'skeptical',
+      clientReaction: `${stakeholderFirstName}: "Let me break down what is happening: Our ${primaryMetric} shifted from ${prevVal} to ${currVal}. In terms of what happened: ${rootHint}. What I need you to say is lead with BLUF: state the root cause clearly, explain that spend is contained, and give me our 48-hour recovery actions like refreshing video hooks and capping ad sets. Now, tell me how we are going to fix this!"`,
+      feedbackNotes: `You asked for clarification. In live agency communications, asking for context is helpful, but you must quickly lead with BLUF ownership and containment. Review the recommended response and talk back to the client.`,
+      goldStandardBenchmark: goldBenchmark,
+      flaggedPhrases: [],
+      strengths: ['Sought clarity rather than fabricating incorrect numbers.'],
+      weaknesses: [
+        'Did not lead with an authoritative recommendation.',
+        'Left client needing to explain the crisis.'
+      ],
+    };
+  }
+
   // 1. Check for empty, trivial, mic test, or nonsensical gibberish / off-topic
   const isTooShort = words.length < 4 || userText.length < 15;
-  const isTestOrGibberish = /\b(test|testing|working nice|oh my god|mic|can you hear|check|hello|hi|hey|what should i say|i don't know|idk|blah|asdf)\b/i.test(lower);
+  const isTestOrGibberish = /\b(test|testing|working nice|oh my god|mic|can you hear|check|hello|hi|hey|blah|asdf)\b/i.test(lower);
   const isOffTopic = matchedMarketingTerms.length === 0 && matchedRootCauses.length === 0;
 
   // CASE A: TRIVIAL / MIC TEST / GIBBERISH / OFF-TOPIC (e.g. "so that would mean oh my god this working nice")
