@@ -5,6 +5,8 @@ import { useSessionStore } from '@/stores/useSessionStore';
 import { useGamificationStore, PathNode } from '@/stores/useGamificationStore';
 import { UniversalMicEngine, NeuralTTS, SOOTHING_VOICE_LIST } from '@/lib/audio';
 import { soundEffects } from '@/lib/soundEffects';
+import { FeedbackData } from '@/components/duo/InstantFeedbackCelebration';
+import { TurnEvaluation } from '@/types/scenario';
 import { 
   X, 
   Volume2, 
@@ -23,7 +25,7 @@ import {
 } from 'lucide-react';
 
 interface VoiceRoleplayExerciseProps {
-  onCompleteExercise: (feedbackData: any) => void;
+  onCompleteExercise: (feedbackData: FeedbackData) => void;
   onExit: () => void;
 }
 
@@ -229,6 +231,8 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
     setIsSubmitting(true);
 
     try {
+      const userApiKey = typeof window !== 'undefined' ? localStorage.getItem('AURA_GEMINI_KEY') || undefined : undefined;
+
       const res = await fetch('/api/roleplay/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -240,21 +244,25 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
             text: d.text,
           })),
           currentTurn: currentTurn,
+          apiKey: userApiKey,
         }),
       });
 
       const data = await res.json();
-      const clientText = data?.turn?.text || data?.clientResponse || "Understood. That explains the CPM shift. What is our 48-hour recovery pacing?";
+      const evaluation: TurnEvaluation | undefined = data?.evaluation;
 
-      const goldBenchmark = activeScenario.modelAnswerBLUF?.bluf || 
-        "Alex, our CPL rose by 42% because Meta audience saturation raised CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target.";
+      const goldBenchmark = evaluation?.goldStandardBenchmark || activeScenario.modelAnswerBLUF?.bluf || 
+        "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.";
 
-      const exerciseScores = {
-        marketingLogic: 94,
-        terminology: 92,
-        grammar: 96,
-        executivePresence: 95,
+      const clientText = evaluation?.clientReaction || data?.turn?.text || "I need a clear, actionable explanation of what happened to our campaigns.";
+      const exerciseScores = evaluation?.scores || {
+        marketingLogic: 25,
+        terminology: 20,
+        grammar: 55,
+        executivePresence: 25,
       };
+      const isPass = Boolean(evaluation?.isPass ?? ((exerciseScores.marketingLogic + exerciseScores.executivePresence) / 2 >= 75));
+      const sentiment = evaluation?.sentiment || (isPass ? 'reassured' : 'confrontational');
 
       // Persist session to Supabase database
       try {
@@ -265,32 +273,40 @@ export const VoiceRoleplayExercise: React.FC<VoiceRoleplayExerciseProps> = ({
           goldStandardBenchmark: goldBenchmark,
           scores: exerciseScores,
           clientReaction: clientText,
-          sentiment: 'reassured',
+          sentiment: sentiment,
         });
       } catch (_) {}
 
-      // Trigger Celebration / Instant Feedback screen with multi-vector scoring
+      // Trigger Celebration / Instant Feedback screen with real dynamic scoring
       onCompleteExercise({
         userPhrasing: finalAnswer,
         goldStandardBenchmark: goldBenchmark,
         scores: exerciseScores,
+        overallScore: evaluation?.overallScore ?? Math.round((exerciseScores.marketingLogic * 0.35) + (exerciseScores.terminology * 0.25) + (exerciseScores.grammar * 0.15) + (exerciseScores.executivePresence * 0.25)),
+        isPass: isPass,
         clientReaction: clientText,
-        sentiment: 'reassured',
+        sentiment: sentiment,
+        feedbackNotes: evaluation?.feedbackNotes,
+        strengths: evaluation?.strengths,
+        weaknesses: evaluation?.weaknesses,
       });
     } catch (err) {
-      // Offline / fallback celebration
+      // Offline / fallback fail-safe
       onCompleteExercise({
         userPhrasing: finalAnswer,
         goldStandardBenchmark: activeScenario.modelAnswerBLUF?.bluf || 
-          "Alex, CPL rose because audience fatigue increased CPMs by 28%. We deployed 3 refreshed video variants with a 20% budget cap to stabilize cost per acquisition.",
+          "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.",
         scores: {
-          marketingLogic: 92,
-          terminology: 90,
-          grammar: 95,
-          executivePresence: 94,
+          marketingLogic: 25,
+          terminology: 20,
+          grammar: 50,
+          executivePresence: 25,
         },
-        clientReaction: "Understood. That BLUF explanation is exactly what the board needed to hear.",
-        sentiment: 'reassured',
+        overallScore: 28,
+        isPass: false,
+        clientReaction: "I need a real technical explanation of what happened to our ad spend.",
+        sentiment: 'confrontational',
+        feedbackNotes: 'Offline fallback evaluation. Could not reach roleplay intelligence service.',
       });
     } finally {
       setIsSubmitting(false);

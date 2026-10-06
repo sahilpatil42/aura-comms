@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RoleplayChatRequestSchema } from '@/lib/validations';
 import { CRISIS_SCENARIOS } from '@/lib/constants/scenarios';
-import { generateClientRoleplayReply } from '@/lib/gemini';
+import { evaluateRoleplayTurn } from '@/lib/gemini';
 import { DialogueTurn } from '@/types/scenario';
 
 export async function POST(req: NextRequest) {
@@ -16,17 +16,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { scenarioId, userMessage, history, currentTurn } = parseResult.data;
+    const { scenarioId, userMessage, history, currentTurn, apiKey } = parseResult.data;
 
     const scenario = CRISIS_SCENARIOS.find((s) => s.id === scenarioId) || CRISIS_SCENARIOS[0];
 
     const typedHistory = history as DialogueTurn[];
 
-    const clientReply = await generateClientRoleplayReply(
+    const evaluation = await evaluateRoleplayTurn(
       scenario,
       userMessage,
       typedHistory,
-      currentTurn
+      currentTurn,
+      apiKey
     );
 
     return NextResponse.json({
@@ -34,11 +35,12 @@ export async function POST(req: NextRequest) {
       turn: {
         id: `turn-client-${Date.now()}`,
         speaker: 'client',
-        text: clientReply.text,
+        text: evaluation.clientReaction,
         timestamp: Date.now(),
-        sentiment: clientReply.sentiment,
-        flaggedPhrases: clientReply.flaggedPhrases || [],
+        sentiment: evaluation.sentiment,
+        flaggedPhrases: evaluation.flaggedPhrases || [],
       },
+      evaluation,
     });
   } catch (error: any) {
     console.error('Error in /api/roleplay/chat:', error);

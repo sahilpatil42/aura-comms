@@ -14,12 +14,14 @@ export const RoleplayChatRequestSchema = z.object({
   userMessage: z.string().min(1).max(3000),
   history: z.array(DialogueTurnSchema),
   currentTurn: z.number().int().min(1).max(10),
+  apiKey: z.string().optional(),
 });
 
 export const EvaluateSessionRequestSchema = z.object({
   scenarioId: z.string(),
   dialogueHistory: z.array(DialogueTurnSchema).min(1),
-  userTotalTurns: z.number().int().min(1),
+  userTotalTurns: z.number().int().min(1).optional().default(1),
+  apiKey: z.string().optional(),
 });
 
 export const DrillSubmissionSchema = z.object({

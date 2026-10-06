@@ -77,15 +77,18 @@ export default function Home() {
     setFeedbackData(data);
   };
 
-  // Handle clicking "CONTINUE" on Screen 4 (Returns to Path Screen with rewards)
+  // Handle clicking "CONTINUE" on Screen 4 (Returns to Path Screen)
   const handleContinueFromCelebration = () => {
     NeuralTTS.stop();
-    if (selectedNode) {
-      completeNode(selectedNode.id, 3);
-    }
     setFeedbackData(null);
     setIsExerciseActive(false);
     setActiveTab('path');
+  };
+
+  // Handle clicking "TRY AGAIN" on Screen 4 (Dismisses modal, keeps user in exercise)
+  const handleTryAgainFromCelebration = () => {
+    NeuralTTS.stop();
+    setFeedbackData(null);
   };
 
   // Handle opening mystery chest
@@ -183,6 +186,7 @@ export default function Home() {
         <InstantFeedbackCelebration
           data={feedbackData}
           onContinue={handleContinueFromCelebration}
+          onTryAgain={handleTryAgainFromCelebration}
         />
       )}
 

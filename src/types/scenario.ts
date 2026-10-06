@@ -137,3 +137,21 @@ export interface DrillDownSession {
   score: number;
   completed: boolean;
 }
+
+export interface TurnEvaluation {
+  scores: {
+    marketingLogic: number;
+    terminology: number;
+    grammar: number;
+    executivePresence: number;
+  };
+  overallScore: number;
+  isPass: boolean;
+  sentiment: 'reassured' | 'skeptical' | 'confrontational';
+  clientReaction: string;
+  feedbackNotes: string;
+  goldStandardBenchmark: string;
+  flaggedPhrases: string[];
+  strengths: string[];
+  weaknesses: string[];
+}

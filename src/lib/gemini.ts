@@ -1,14 +1,19 @@
-import { Scenario, DialogueTurn, SessionEvaluation, FlaggedPhraseItem } from '@/types/scenario';
+import { Scenario, DialogueTurn, SessionEvaluation, FlaggedPhraseItem, TurnEvaluation } from '@/types/scenario';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-export async function callGemini(prompt: string, systemInstruction?: string): Promise<string | null> {
-  if (!GEMINI_API_KEY) {
+export async function callGemini(
+  prompt: string, 
+  systemInstruction?: string, 
+  apiKeyOverride?: string
+): Promise<string | null> {
+  const activeKey = apiKeyOverride || GEMINI_API_KEY;
+  if (!activeKey) {
     return null;
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`;
     
     const body: Record<string, unknown> = {
       contents: [
@@ -140,6 +145,17 @@ function generateDeterministicClientReply(
 ): { text: string; sentiment: 'confrontational' | 'skeptical' | 'reassured' | 'neutral'; flaggedPhrases?: string[] } {
   const lower = userMessage.toLowerCase();
   const name = scenario.stakeholder.name.split(' ')[0];
+
+  // Immediately confront user if input is off-topic, gibberish, mic-test, or relies on prohibited excuses
+  const words = userMessage.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const turnEval = generateDeterministicTurnEvaluation(scenario, userMessage, words, lower);
+  if (!turnEval.isPass && turnEval.sentiment === 'confrontational') {
+    return {
+      text: turnEval.clientReaction,
+      sentiment: 'confrontational',
+      flaggedPhrases: [...flagged, ...(turnEval.flaggedPhrases || [])],
+    };
+  }
 
   // BEGINNER SCENARIO 1: Google Ads Ad Not Showing
   if (scenario.id === 'google-ads-ad-not-showing') {
@@ -364,19 +380,276 @@ function generateDeterministicClientReply(
     };
   }
 
-  // Dynamic Contextual Fallback for Intermediate & Advanced scenarios
-  if (scenario.difficulty === 'beginner') {
+  // Dynamic Evaluation-driven fallback for all curriculum scenarios
+  return {
+    text: turnEval.clientReaction,
+    sentiment: turnEval.sentiment,
+    flaggedPhrases: [...flagged, ...(turnEval.flaggedPhrases || [])],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Single-Turn Instant Evaluator (Used by VoiceRoleplayExercise)
+// ---------------------------------------------------------------------------
+export async function evaluateRoleplayTurn(
+  scenario: Scenario,
+  userMessage: string,
+  history: DialogueTurn[] = [],
+  currentTurn: number = 1,
+  apiKeyOverride?: string
+): Promise<TurnEvaluation> {
+  const activeKey = apiKeyOverride || GEMINI_API_KEY;
+  const userText = (userMessage || '').trim();
+  const lower = userText.toLowerCase();
+  const words = lower.split(/\s+/).filter(Boolean);
+
+  // If Gemini key is available, use real LLM evaluation with strict rubric
+  if (activeKey) {
+    const prompt = `
+You are an expert Performance Marketing Managing Director grading an agency media buyer responding to a panicking client during a live crisis.
+
+SCENARIO: "${scenario.title}" (${scenario.difficulty.toUpperCase()})
+STAKEHOLDER: "${scenario.stakeholder.name}", ${scenario.stakeholder.title} at ${scenario.stakeholder.organization}
+STAKEHOLDER TEMPERAMENT: "${scenario.stakeholder.temperament}"
+CLIENT CRISIS OBJECTION: "${scenario.initialClientDialogue}"
+TARGET ROOT CAUSES: ${scenario.targetRootCauses.join('; ')}
+PROHIBITED EXCUSES: ${scenario.prohibitedExcuses.join('; ')}
+GOLD STANDARD BLUF BENCHMARK: "${scenario.modelAnswerBLUF.bluf}"
+
+THE USER (MEDIA BUYER) RESPONDED:
+"${userText}"
+
+STRICT EVALUATION RUBRIC:
+1. OFF-TOPIC, TRIVIAL, MIC TESTING, OR NONSENSE (e.g. "so that would mean oh my god this working nice", "testing mic", "hello", "i don't know", random chit-chat):
+   - You MUST assign FAILING scores: marketingLogic: 5-25, terminology: 5-20, grammar: 40-60, executivePresence: 10-25.
+   - overallScore: 10-25.
+   - isPass: false.
+   - sentiment: "confrontational".
+   - clientReaction: The client is baffled and outraged that the user gave an irrelevant/gibberish reply instead of solving the crisis.
+   - feedbackNotes: Explain that the response was completely off-topic and did not diagnose the metric shift or provide containment.
+
+2. DEFENSIVE / PROHIBITED EXCUSES (blaming the algorithm without evidence, "wait for learning phase", "it's not our fault"):
+   - marketingLogic: 25-45, terminology: 30-50, executivePresence: 25-40.
+   - overallScore: 30-45.
+   - isPass: false.
+   - sentiment: "confrontational".
+   - feedbackNotes: Explain why blaming the algorithm without proof destroys client trust.
+
+3. PARTIAL / WEAK (mentions the metric, but leaves out the root cause, actionable containment, or timeline):
+   - overallScore: 50-68.
+   - isPass: false.
+   - sentiment: "skeptical".
+   - feedbackNotes: Point out the missing containment plan and next steps.
+
+4. EXCELLENT / GOLD STANDARD (clear BLUF framing, diagnoses root cause, articulates containment and recovery timeline):
+   - overallScore: 85-98.
+   - isPass: true.
+   - sentiment: "reassured".
+   - feedbackNotes: Praise the BLUF ownership, precision, and reassuring demeanor.
+
+RETURN JSON IN THIS EXACT STRUCTURE (no markdown, valid JSON only):
+{
+  "scores": {
+    "marketingLogic": number (0-100),
+    "terminology": number (0-100),
+    "grammar": number (0-100),
+    "executivePresence": number (0-100)
+  },
+  "overallScore": number (0-100),
+  "isPass": boolean,
+  "sentiment": "reassured" | "skeptical" | "confrontational",
+  "clientReaction": "spoken client response in character",
+  "feedbackNotes": "director critique explaining why it passed or failed",
+  "flaggedPhrases": ["phrase1"],
+  "strengths": ["strength1"],
+  "weaknesses": ["weakness1"]
+}
+`;
+
+    try {
+      const aiRes = await callGemini(prompt, "You are a master performance marketing agency director. Output strictly valid JSON.", activeKey);
+      if (aiRes) {
+        const clean = aiRes.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(clean);
+        return {
+          scores: {
+            marketingLogic: Math.round(parsed.scores?.marketingLogic ?? 50),
+            terminology: Math.round(parsed.scores?.terminology ?? 50),
+            grammar: Math.round(parsed.scores?.grammar ?? 60),
+            executivePresence: Math.round(parsed.scores?.executivePresence ?? 50),
+          },
+          overallScore: Math.round(parsed.overallScore ?? 50),
+          isPass: Boolean(parsed.isPass ?? (parsed.overallScore >= 70 && parsed.sentiment === 'reassured')),
+          sentiment: parsed.sentiment || (parsed.overallScore >= 70 ? 'reassured' : 'confrontational'),
+          clientReaction: parsed.clientReaction || `${scenario.stakeholder.name}: "I need a real explanation of what happened to our campaigns."`,
+          feedbackNotes: parsed.feedbackNotes || "Evaluate against the BLUF framework.",
+          goldStandardBenchmark: scenario.modelAnswerBLUF.bluf,
+          flaggedPhrases: Array.isArray(parsed.flaggedPhrases) ? parsed.flaggedPhrases : [],
+          strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
+          weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [],
+        };
+      }
+    } catch (e) {
+      console.warn("Gemini evaluation error, falling back to deterministic:", e);
+    }
+  }
+
+  // High-precision deterministic evaluation fallback
+  return generateDeterministicTurnEvaluation(scenario, userText, words, lower);
+}
+
+function generateDeterministicTurnEvaluation(
+  scenario: Scenario,
+  userText: string,
+  words: string[],
+  lower: string
+): TurnEvaluation {
+  const goldBenchmark = scenario.modelAnswerBLUF?.bluf || 
+    "Alex, bottom line up front: Our CPL rose because audience saturation drove Meta CPMs from $18 to $26. We immediately deployed 3 fresh creative video hooks and capped ad set spend to lock pacing back to target within 48 hours.";
+
+  const stakeholderFirstName = scenario.stakeholder.name.split(' ')[0];
+  const primaryKPI = scenario.brokenKPIs[0]?.metric || 'target metrics';
+
+  // Marketing & scenario vocabulary
+  const marketingVocab = [
+    'cpl', 'cpm', 'ctr', 'cpc', 'roas', 'cac', 'conversion', 'conversions',
+    'lead', 'leads', 'budget', 'spend', 'ad set', 'adsets', 'ad set spend', 'campaign',
+    'creative', 'creatives', 'fatigue', 'saturation', 'frequency', 'impression', 'impressions',
+    'clicks', 'bidding', 'audience', 'audiences', 'targeting', 'pause', 'refresh', 'hook',
+    'hooks', 'video', 'retargeting', 'pacing', 'cap', 'capped', 'reallocated', 'tracking',
+    'pixel', 'capi', 'bluf', 'bottom line', 'pmax', 'quality score', 'search terms',
+    'negative keywords', 'inventory', 'dark store', 'discrepancy', 'preview tool',
+    'variants', 'variant', 'stop-loss', 'containment'
+  ];
+  const matchedMarketingTerms = marketingVocab.filter(term => lower.includes(term));
+
+  // Root cause keywords from scenario definition
+  const rootCauseWords = scenario.targetRootCauses.flatMap(rc => 
+    rc.toLowerCase().split(/\W+/).filter(w => w.length > 3)
+  );
+  const matchedRootCauses = rootCauseWords.filter(k => lower.includes(k));
+
+  // Prohibited excuses check
+  const prohibitedTriggers = [
+    'algorithm is learning', 'algorithm changed', 'blame the algorithm', 'google changed',
+    'meta changed', 'not our fault', 'give it time', 'wait a few weeks', 'give it a few weeks',
+    'learning phase', 'market volatility', 'everyone is seeing this', 'it is what it is'
+  ];
+  const matchedExcuses = prohibitedTriggers.filter(ex => lower.includes(ex));
+
+  // Structural checks
+  const hasBluf = /\b(bottom line|bluf|up front|immediate|contained|here is what|to stabilize)\b/i.test(lower);
+  const hasActionPlan = /\b(deployed|paused|refreshed|capped|reallocated|stabiliz|variant|variants|hook|hooks|audit|tested|schedule|plan|stop-loss)\b/i.test(lower);
+
+  // 1. Check for empty, trivial, mic test, or nonsensical gibberish / off-topic
+  const isTooShort = words.length < 4 || userText.length < 15;
+  const isTestOrGibberish = /\b(test|testing|working nice|oh my god|mic|can you hear|check|hello|hi|hey|what should i say|i don't know|idk|blah|asdf)\b/i.test(lower);
+  const isOffTopic = matchedMarketingTerms.length === 0 && matchedRootCauses.length === 0;
+
+  // CASE A: TRIVIAL / MIC TEST / GIBBERISH / OFF-TOPIC (e.g. "so that would mean oh my god this working nice")
+  if (isTooShort || isTestOrGibberish || isOffTopic) {
     return {
-      text: `Thank you for taking the time to explain this to me. As long as our budget is safe and prospective customers are seeing our business, that gives me peace of mind. Let's touch base next week on how it's pacing.`,
-      sentiment: 'reassured',
-      flaggedPhrases: flagged
+      scores: {
+        marketingLogic: 15,
+        terminology: 10,
+        grammar: 45,
+        executivePresence: 18,
+      },
+      overallScore: 19,
+      isPass: false,
+      sentiment: 'confrontational',
+      clientReaction: `${stakeholderFirstName}: "That doesn't answer my question at all. We are burning budget and our ${primaryKPI} took a massive hit, and you're saying '${userText.slice(0, 45)}'?! What is the actual technical explanation for why this happened?!"`,
+      feedbackNotes: `Your response was off-topic or conversational filler. In a live client confrontation, panicking stakeholders require an immediate BLUF (Bottom Line Up Front) explanation addressing why ${primaryKPI} shifted and what containment actions you deployed.`,
+      goldStandardBenchmark: goldBenchmark,
+      flaggedPhrases: [userText],
+      strengths: [],
+      weaknesses: [
+        `Completely failed to address why ${primaryKPI} degraded.`,
+        'Used zero performance marketing terminology.',
+        'Left the client panicked without operational containment.'
+      ],
     };
   }
 
+  // CASE B: PROHIBITED EXCUSES / BLAMING ALGORITHM
+  if (matchedExcuses.length > 0) {
+    return {
+      scores: {
+        marketingLogic: 32,
+        terminology: 40,
+        grammar: 68,
+        executivePresence: 28,
+      },
+      overallScore: 39,
+      isPass: false,
+      sentiment: 'confrontational',
+      clientReaction: `${stakeholderFirstName}: "Don't just blame the algorithm or tell me to wait! We are losing thousands of dollars every day. Did anyone on your team actually audit our campaigns before this call?!"`,
+      feedbackNotes: `You relied on a prohibited excuse ("${matchedExcuses[0]}"). Never deflect to platform black boxes without empirical telemetry. Panicking stakeholders need operational ownership and an immediate stop-loss.`,
+      goldStandardBenchmark: goldBenchmark,
+      flaggedPhrases: matchedExcuses,
+      strengths: ['Identified that campaigns are in an active state.'],
+      weaknesses: [
+        `Used a prohibited excuse: "${matchedExcuses[0]}".`,
+        'Passive delay tactic ("give it time / wait") erodes client trust.',
+        'Failed to propose proactive creative or bidding containment.'
+      ],
+    };
+  }
+
+  // CASE C: PARTIAL / WEAK EXPLANATION (Mentions a metric or keyword, but no actionable containment or no BLUF)
+  const isPartial = matchedMarketingTerms.length < 2 || !hasActionPlan || matchedRootCauses.length === 0;
+  if (isPartial) {
+    return {
+      scores: {
+        marketingLogic: 58,
+        terminology: 62,
+        grammar: 76,
+        executivePresence: 54,
+      },
+      overallScore: 62,
+      isPass: false,
+      sentiment: 'skeptical',
+      clientReaction: `${stakeholderFirstName}: "Okay, so you pointed to that metric shift, but what is our immediate 48-hour plan to contain this? I need concrete action items before I agree to keep campaigns active."`,
+      feedbackNotes: `You identified part of the problem, but failed to provide an immediate containment plan or timeline. In performance marketing, diagnosing the issue without a fix leaves clients anxious. Lead with BLUF and state your stop-loss action in sentence #1.`,
+      goldStandardBenchmark: goldBenchmark,
+      flaggedPhrases: [],
+      strengths: [
+        matchedMarketingTerms.length > 0 ? `Used marketing metrics (${matchedMarketingTerms.slice(0, 2).join(', ')}).` : 'Acknowledged client concern.'
+      ],
+      weaknesses: [
+        'Missing proactive 48-hour containment action items.',
+        'Opening sentence was chronological rather than BLUF-first.'
+      ],
+    };
+  }
+
+  // CASE D: EXCELLENT / GOLD STANDARD ANSWER
+  const logicScore = Math.min(98, 88 + Math.min(matchedRootCauses.length * 2, 6));
+  const termScore = Math.min(96, 86 + Math.min(matchedMarketingTerms.length * 2, 8));
+  const grammarScore = 96;
+  const presenceScore = hasBluf ? 95 : 88;
+  const overall = Math.round((logicScore * 0.35) + (termScore * 0.25) + (grammarScore * 0.15) + (presenceScore * 0.25));
+
   return {
-    text: `I appreciate the technical context. Given our ${scenario.urgencyTimeline.toLowerCase()}, I need your exact confirmation: what immediate stop-loss has been deployed, and when will our core metrics normalize back to benchmark?`,
-    sentiment: 'neutral',
-    flaggedPhrases: flagged
+    scores: {
+      marketingLogic: logicScore,
+      terminology: termScore,
+      grammar: grammarScore,
+      executivePresence: presenceScore,
+    },
+    overallScore: overall,
+    isPass: true,
+    sentiment: 'reassured',
+    clientReaction: `${stakeholderFirstName}: "Understood. That is the exact clarity I needed. Having those corrective steps deployed with capped spend gives me confidence. Keep me posted on how pacing looks tomorrow."`,
+    feedbackNotes: `Exceptional execution of the BLUF framework. You diagnosed the root cause, communicated clear containment measures, and protected client confidence without making excuses.`,
+    goldStandardBenchmark: goldBenchmark,
+    flaggedPhrases: [],
+    strengths: [
+      'Led with authoritative BLUF framing.',
+      `Precise root cause diagnosis (${matchedRootCauses.slice(0, 2).join(', ')}).`,
+      'Actionable 48-hour recovery timeline.'
+    ],
+    weaknesses: [],
   };
 }
 
